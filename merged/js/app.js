@@ -275,7 +275,42 @@
       location.href = href("quote");
     });
 
-    // Keep search in document flow — sticky/fixed caused overlaps with CTAs
+    // Sticky search: pin after leaving hero, keep spacer so strip stays readable
+    const spacer = document.getElementById("search-spacer");
+    const mq = window.matchMedia("(min-width: 701px)");
+
+    function unpin() {
+      if (!float) return;
+      float.classList.remove("is-pinned");
+      if (spacer) spacer.style.height = "0px";
+    }
+
+    function pin() {
+      if (!float || !mq.matches) return;
+      const h = float.offsetHeight;
+      if (spacer) spacer.style.height = `${h}px`;
+      float.classList.add("is-pinned");
+    }
+
+    function onScroll() {
+      if (!float || !hero) return;
+      if (!mq.matches) {
+        unpin();
+        return;
+      }
+      const heroBottom = hero.getBoundingClientRect().bottom;
+      if (heroBottom < 80) pin();
+      else unpin();
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", () => {
+      if (float?.classList.contains("is-pinned") && spacer) {
+        spacer.style.height = `${float.offsetHeight}px`;
+      }
+      onScroll();
+    });
+    onScroll();
   }
 
   function carImg(c) {
