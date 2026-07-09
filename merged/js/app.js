@@ -438,8 +438,6 @@
     set("eyebrow", dict.home.eyebrow);
     set("hero-title", dict.home.title);
     set("hero-lede", dict.home.lede);
-    set("cta-quote", dict.home.ctaQuote);
-    set("cta-routes", dict.home.ctaRoutes);
     ["1", "2", "3", "4"].forEach((n) => {
       set(`strip${n}t`, dict.home[`strip${n}t`]);
       set(`strip${n}d`, dict.home[`strip${n}d`]);
