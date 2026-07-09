@@ -268,24 +268,32 @@
     const defaultUntil = trip.until || "2026-07-27T10:00";
     if (from) from.value = defaultFrom;
     if (until) until.value = defaultUntil;
-    if (pickup) pickup.innerHTML = stationOptions(trip.pickup || "brc");
-    if (dropoff) dropoff.innerHTML = stationOptions(trip.dropoff || "fte", true);
-    if (oneway) oneway.checked = Boolean(trip.oneway) || (trip.pickup && trip.dropoff && trip.pickup !== trip.dropoff);
+    const defaultPickup = trip.pickup || "brc";
+    const defaultDrop =
+      trip.dropoff ||
+      (trip.oneway ? "fte" : defaultPickup) ||
+      defaultPickup;
+    if (pickup) pickup.innerHTML = stationOptions(defaultPickup);
+    if (dropoff) dropoff.innerHTML = stationOptions(defaultDrop, true);
+    // Slim search always shows pickup + dropoff; one-way mirrors different stations
+    if (dropWrap) dropWrap.classList.add("is-on");
+    form.classList.add("has-drop");
+    if (oneway) oneway.checked = Boolean(trip.oneway) || defaultPickup !== defaultDrop;
     if (winter) winter.checked = Boolean(trip.winter) || isWinterSeason(defaultFrom);
     if (wantChild) wantChild.checked = Boolean(trip.wantChild) || Boolean(trip.extras?.child || trip.extras?.infant || trip.extras?.booster);
 
+    let syncingStations = false;
+
     function sync() {
-      const isOne = oneway?.checked;
-      if (dropWrap) dropWrap.classList.toggle("is-on", Boolean(isOne));
-      form.classList.toggle("has-drop", Boolean(isOne));
       const p = pickup?.value;
-      const d = isOne ? dropoff?.value : p;
+      const d = dropoff?.value || p;
+      const isOne = Boolean(p && d && p !== d);
+      if (oneway && oneway.checked !== isOne) oneway.checked = isOne;
       const fee = isOne ? onewayFee(p, d) : 0;
       if (feeBox) {
         const dict = t().search;
-        const show = Boolean(isOne && fee);
-        feeBox.classList.toggle("is-on", show);
-        feeBox.textContent = show ? `${dict.feeLabel}: ${money(fee)}` : "";
+        feeBox.classList.toggle("is-on", Boolean(isOne && fee));
+        feeBox.textContent = isOne && fee ? `${dict.feeLabel}: ${money(fee)}` : "";
       }
       if (winterBox) {
         const show =
@@ -296,17 +304,35 @@
       }
     }
 
-    form.addEventListener("change", sync);
-    oneway?.addEventListener("change", sync);
+    oneway?.addEventListener("change", () => {
+      if (syncingStations) return;
+      if (!oneway.checked && pickup && dropoff) {
+        syncingStations = true;
+        dropoff.value = pickup.value;
+        syncingStations = false;
+      } else if (oneway.checked && pickup && dropoff && dropoff.value === pickup.value) {
+        // Suggest a common one-way destination when enabling
+        syncingStations = true;
+        dropoff.value = pickup.value === "brc" ? "fte" : "brc";
+        syncingStations = false;
+      }
+      sync();
+    });
+
+    form.addEventListener("change", (e) => {
+      if (syncingStations) return;
+      if (e.target === oneway) return;
+      sync();
+    });
     winter?.addEventListener("change", sync);
     sync();
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const isOne = oneway?.checked;
+      const isOne = pickup.value !== dropoff.value;
       const payload = {
         pickup: pickup.value,
-        dropoff: isOne ? dropoff.value : pickup.value,
+        dropoff: dropoff.value,
         oneway: isOne,
         from: from.value,
         until: until.value,
