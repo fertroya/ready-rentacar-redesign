@@ -534,11 +534,7 @@
     renderFleetGrid(document.getElementById("home-fleet"), "all");
     bindSearchForm(document.getElementById("home-search"));
 
-    const ctaQuote = document.getElementById("cta-quote");
-    const ctaRoutes = document.getElementById("cta-routes");
     const mpCta = document.getElementById("mp-cta");
-    if (ctaQuote) ctaQuote.href = href("quote");
-    if (ctaRoutes) ctaRoutes.href = href("routes");
     if (mpCta) mpCta.href = href("quote");
     const whyMore = document.getElementById("why-more");
     if (whyMore) {
