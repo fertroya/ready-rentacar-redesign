@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Online quote · Ready Rent-a-Car</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/site.css" />
+</head>
+<body data-page="quote">
+  <header class="site-header" id="site-header"></header>
+  <main id="main" class="page">
+    <p class="eyebrow">Ready</p>
+    <h1 id="page-title">Online quote</h1>
+    <p class="lede" id="page-lede"></p>
+
+    <div class="quote-layout">
+      <form class="quote-panel" id="quote-form">
+        <div class="steps">
+          <span class="step-pill is-active" data-qstep="1" id="q-step1-label">1 · Trip</span>
+          <span class="step-pill" data-qstep="2" id="q-step2-label">2 · Vehicle</span>
+          <span class="step-pill" data-qstep="3" id="q-step3-label">3 · Details</span>
+        </div>
+
+        <div data-qpanel="1">
+          <div class="field" style="margin-bottom:12px">
+            <label data-i18n="search.pickup">Pick-up</label>
+            <select name="pickup"></select>
+          </div>
+          <label class="check" style="margin-bottom:12px">
+            <input type="checkbox" name="oneway" />
+            <span data-i18n="search.oneway">One-way</span>
+          </label>
+          <div class="field" data-drop-wrap hidden style="margin-bottom:12px">
+            <label data-i18n="search.dropoff">Drop-off</label>
+            <select name="dropoff"></select>
+          </div>
+          <div class="grid-2" style="margin-bottom:12px">
+            <div class="field">
+              <label data-i18n="search.from">From</label>
+              <input type="datetime-local" name="from" />
+            </div>
+            <div class="field">
+              <label data-i18n="search.until">Until</label>
+              <input type="datetime-local" name="until" />
+            </div>
+          </div>
+          <label class="check" style="margin-bottom:10px">
+            <input type="checkbox" name="winter" />
+            <span data-i18n="search.winter">Winter</span>
+          </label>
+          <label class="check" style="margin-bottom:16px">
+            <input type="checkbox" name="premium" />
+            <span>Premium insurance · Mercado Pago 6×</span>
+          </label>
+          <button type="button" class="btn btn-ember" id="to-step-2" data-i18n="quotePage.showCars">Show vehicles</button>
+        </div>
+
+        <div data-qpanel="2" hidden>
+          <div id="quote-cars"></div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
+            <button type="button" class="btn btn-ghost" id="back-1" data-i18n="quotePage.back">Back</button>
+            <button type="button" class="btn btn-ember" id="to-step-3" data-i18n="quotePage.continue">Continue</button>
+          </div>
+        </div>
+
+        <div data-qpanel="3" hidden>
+          <div class="field" style="margin-bottom:12px">
+            <label data-i18n="quotePage.name">Name</label>
+            <input name="name" required />
+          </div>
+          <div class="field" style="margin-bottom:12px">
+            <label data-i18n="quotePage.email">Email</label>
+            <input type="email" name="email" required />
+          </div>
+          <div class="field" style="margin-bottom:12px">
+            <label data-i18n="quotePage.phone">Phone</label>
+            <input name="phone" required />
+          </div>
+          <div class="field" style="margin-bottom:16px">
+            <label data-i18n="quotePage.notes">Notes</label>
+            <textarea name="notes" rows="3" data-i18n="quotePage.notesPh"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button type="button" class="btn btn-ghost" id="back-2" data-i18n="quotePage.back">Back</button>
+            <button type="submit" class="btn btn-ember" data-i18n="quotePage.request">Request quote</button>
+          </div>
+        </div>
+      </form>
+
+      <aside class="quote-panel" id="quote-aside">
+        <h3 style="margin-top:0">Summary</h3>
+        <div class="summary-box" id="quote-summary"></div>
+      </aside>
+    </div>
+
+    <div class="card" id="success" hidden style="margin-top:24px">
+      <div class="card-body">
+        <h2 id="success-title"></h2>
+        <p id="success-body" style="color:var(--muted)"></p>
+        <a class="btn btn-ember" id="success-wa" href="#" target="_blank" rel="noopener"></a>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

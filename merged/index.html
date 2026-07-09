@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ready Rent-a-Car · Patagonia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/site.css" />
+</head>
+<body data-page="home">
+  <header class="site-header" id="site-header"></header>
+
+  <main id="main">
+    <section class="hero" aria-label="Hero">
+      <div class="hero-media" role="img" aria-label="Patagonia"></div>
+      <div class="hero-veil"></div>
+      <div class="hero-content">
+        <p class="eyebrow" id="eyebrow" style="color:rgba(255,255,255,.85)"></p>
+        <h1 id="hero-title">Ready</h1>
+        <p class="lede" id="hero-lede"></p>
+        <div style="display:flex;flex-wrap:wrap;gap:12px">
+          <a class="btn btn-ember btn-lg" href="quote.html" id="cta-quote"></a>
+          <a class="btn btn-ghost-light" href="routes.html" id="cta-routes"></a>
+        </div>
+      </div>
+
+      <form class="search-card" id="home-search" aria-label="Trip search">
+        <div class="search-grid">
+          <div class="field">
+            <label for="pickup" id="label-pickup">Pick-up</label>
+            <select id="pickup" name="pickup"></select>
+          </div>
+          <div class="field">
+            <label for="from" id="label-from">From</label>
+            <input id="from" name="from" type="datetime-local" />
+          </div>
+          <div class="field">
+            <label for="until" id="label-until">Until</label>
+            <input id="until" name="until" type="datetime-local" />
+          </div>
+          <button type="submit" class="btn btn-ember" id="search-submit">Get quote</button>
+        </div>
+        <div class="search-extras">
+          <label class="check"><input type="checkbox" name="oneway" /> <span id="label-oneway">One-way</span></label>
+          <label class="check"><input type="checkbox" name="age21" checked /> <span id="label-age21">21+</span></label>
+          <label class="check"><input type="checkbox" name="winter" /> <span id="label-winter">Winter</span></label>
+          <div class="field" data-drop-wrap hidden style="min-width:220px;flex:1">
+            <label for="dropoff" id="label-dropoff">Drop-off</label>
+            <select id="dropoff" name="dropoff"></select>
+          </div>
+          <div class="oneway-fee" data-oneway-fee></div>
+          <div class="winter-banner" data-winter-banner></div>
+        </div>
+      </form>
+    </section>
+
+    <div class="strip" aria-label="Highlights">
+      <div><strong id="strip1t"></strong><span id="strip1d"></span></div>
+      <div><strong id="strip2t"></strong><span id="strip2d"></span></div>
+      <div><strong id="strip3t"></strong><span id="strip3d"></span></div>
+      <div><strong id="strip4t"></strong><span id="strip4d"></span></div>
+    </div>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 id="routes-title"></h2>
+        <p id="routes-lede"></p>
+      </div>
+      <div class="grid-2" id="route-grid"></div>
+    </section>
+
+    <section class="section section-muted">
+      <div class="inner">
+        <div class="section-head">
+          <h2 id="why-title"></h2>
+          <p id="why-lede"></p>
+        </div>
+        <div class="grid-3">
+          <article class="card"><div class="card-body"><h3 id="why1t"></h3><p id="why1d" style="color:var(--muted);margin:0"></p></div></article>
+          <article class="card"><div class="card-body"><h3 id="why2t"></h3><p id="why2d" style="color:var(--muted);margin:0"></p></div></article>
+          <article class="card"><div class="card-body"><h3 id="why3t"></h3><p id="why3d" style="color:var(--muted);margin:0"></p></div></article>
+        </div>
+        <p style="margin-top:20px"><a class="btn btn-ghost" id="why-more" href="services.html">Why Ready →</a></p>
+      </div>
+    </section>
+
+    <div class="trust-mp">
+      <div>
+        <span class="mp-badge">Mercado Pago</span>
+        <h2 id="mp-title" style="color:#fff;margin-top:12px"></h2>
+        <p id="mp-lede"></p>
+      </div>
+      <a class="btn btn-mp" href="quote.html" id="mp-cta"></a>
+    </div>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 id="fleet-title"></h2>
+        <p id="fleet-lede"></p>
+      </div>
+      <div class="grid-3" id="home-fleet"></div>
+      <p style="margin-top:20px"><a class="btn btn-solid" id="fleet-more" href="fleet.html">Fleet →</a></p>
+    </section>
+
+    <section class="section section-muted">
+      <div class="inner">
+        <div class="section-head">
+          <h2 id="stations-title"></h2>
+          <p id="stations-lede"></p>
+        </div>
+        <div class="grid-3" id="station-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="sticky-cta" id="sticky-cta"></div>
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
