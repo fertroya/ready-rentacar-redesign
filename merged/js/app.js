@@ -138,8 +138,8 @@
             .join("")}
         </div>
         <a class="btn btn-ghost btn-sm" href="${DATA.whatsappLink}" target="_blank" rel="noopener">WhatsApp</a>
-        <a class="btn btn-ember btn-sm" href="${href("quote")}">${dict.nav.quote}</a>
-        <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false">Menu</button>
+        <a class="btn btn-ember btn-sm btn-header-quote" href="${href("quote")}">${dict.nav.quote}</a>
+        <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-label="Menu">☰</button>
       </div>
     `;
     el.querySelectorAll("[data-lang]").forEach((btn) => {
@@ -234,6 +234,7 @@
     function sync() {
       const isOne = oneway?.checked;
       if (dropWrap) dropWrap.classList.toggle("is-on", Boolean(isOne));
+      form.classList.toggle("has-drop", Boolean(isOne));
       const p = pickup?.value;
       const d = isOne ? dropoff?.value : p;
       const fee = isOne ? onewayFee(p, d) : 0;
@@ -274,13 +275,7 @@
       location.href = href("quote");
     });
 
-    if (float && hero && window.matchMedia("(min-width: 961px)").matches) {
-      const io = new IntersectionObserver(
-        ([entry]) => float.classList.toggle("is-stuck", !entry.isIntersecting),
-        { threshold: 0.12 }
-      );
-      io.observe(hero);
-    }
+    // Keep search in document flow — sticky/fixed caused overlaps with CTAs
   }
 
   function carImg(c) {
