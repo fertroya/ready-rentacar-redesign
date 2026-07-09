@@ -170,6 +170,7 @@
           <div class="integrations">
             <span class="int-pill">Jedeye / AnyRent</span>
             <span class="int-pill">Mercado Pago</span>
+            <span class="int-pill">Stripe</span>
             <span class="int-pill">WhatsApp</span>
             <span class="int-pill">EN · ES · PT</span>
           </div>
@@ -209,15 +210,17 @@
   function bindSearchForm(form) {
     if (!form) return;
     const trip = TRIP.load();
+    const float = document.getElementById("search-float");
+    const hero = document.querySelector(".hero");
     const pickup = form.querySelector('[name="pickup"]');
     const dropoff = form.querySelector('[name="dropoff"]');
-    const dropWrap = form.querySelector("[data-drop-wrap]");
-    const oneway = form.querySelector('[name="oneway"]');
+    const dropWrap = document.querySelector("[data-drop-wrap]");
+    const oneway = document.getElementById("oneway") || form.querySelector('[name="oneway"]');
     const from = form.querySelector('[name="from"]');
     const until = form.querySelector('[name="until"]');
-    const winter = form.querySelector('[name="winter"]');
-    const feeBox = form.querySelector("[data-oneway-fee]");
-    const winterBox = form.querySelector("[data-winter-banner]");
+    const winter = document.getElementById("winter") || form.querySelector('[name="winter"]');
+    const feeBox = document.querySelector("[data-oneway-fee]");
+    const winterBox = document.querySelector("[data-winter-banner]");
 
     const defaultFrom = trip.from || "2026-07-20T10:00";
     const defaultUntil = trip.until || "2026-07-27T10:00";
@@ -230,27 +233,28 @@
 
     function sync() {
       const isOne = oneway?.checked;
-      if (dropWrap) dropWrap.hidden = !isOne;
+      if (dropWrap) dropWrap.classList.toggle("is-on", Boolean(isOne));
       const p = pickup?.value;
       const d = isOne ? dropoff?.value : p;
       const fee = isOne ? onewayFee(p, d) : 0;
       if (feeBox) {
-        feeBox.classList.toggle("is-on", true);
         const dict = t().search;
-        feeBox.innerHTML = isOne && fee
-          ? `<strong>${dict.feeLabel}:</strong> ${money(fee)} <span style="opacity:.8">· ${dict.feeHint}</span>`
-          : `<strong>${dict.feeNone}</strong>`;
+        const show = Boolean(isOne && fee);
+        feeBox.classList.toggle("is-on", show);
+        feeBox.textContent = show ? `${dict.feeLabel}: ${money(fee)}` : "";
       }
       if (winterBox) {
         const show =
           winter?.checked ||
           ((p === "brc" || p === "cpc") && isWinterSeason(from?.value));
         winterBox.classList.toggle("is-on", show);
-        winterBox.textContent = t().home.winterNote;
+        winterBox.textContent = show ? t().home.winterNoteShort || t().home.winterNote : "";
       }
     }
 
     form.addEventListener("change", sync);
+    oneway?.addEventListener("change", sync);
+    winter?.addEventListener("change", sync);
     sync();
 
     form.addEventListener("submit", (e) => {
@@ -263,12 +267,26 @@
         from: from.value,
         until: until.value,
         winter: Boolean(winter?.checked),
-        age21: Boolean(form.querySelector('[name="age21"]')?.checked),
+        age21: Boolean(document.querySelector('[name="age21"]')?.checked),
         onewayFee: isOne ? onewayFee(pickup.value, dropoff.value) : 0,
       };
       TRIP.save(payload);
       location.href = href("quote");
     });
+
+    if (float && hero && window.matchMedia("(min-width: 961px)").matches) {
+      const io = new IntersectionObserver(
+        ([entry]) => float.classList.toggle("is-stuck", !entry.isIntersecting),
+        { threshold: 0.12 }
+      );
+      io.observe(hero);
+    }
+  }
+
+  function carImg(c) {
+    if (!c?.img) return "";
+    if (/^https?:\/\//.test(c.img)) return c.img;
+    return `${BASE}${c.img}`;
   }
 
   function carLabel(id) {
@@ -288,7 +306,7 @@
         const label = carLabel(c.id);
         return `
           <article class="card fleet-card" data-id="${c.id}">
-            <div class="card-media" style="background-image:url('${c.img}')"></div>
+            <div class="card-media fleet-photo" style="background-image:url('${carImg(c)}')"></div>
             <div class="card-body">
               <h3>${label.name}${c.isNew ? `<span class="badge-new">NEW</span>` : ""}${c.corporate ? ` <span class="chip-dark">${dict.corporate}</span>` : ""}</h3>
               <p style="margin:0;color:var(--muted)">${label.similar}</p>
@@ -406,17 +424,7 @@
     }
 
     const sticky = document.getElementById("sticky-cta");
-    const hero = document.querySelector(".hero");
-    if (sticky && hero) {
-      const io = new IntersectionObserver(
-        ([entry]) => sticky.classList.toggle("is-on", !entry.isIntersecting),
-        { threshold: 0.2 }
-      );
-      io.observe(hero);
-      sticky.innerHTML = `
-        <div><strong>${dict.nav.quote}</strong><span>${dict.home.lede.slice(0, 64)}…</span></div>
-        <a class="btn btn-ember" href="${href("quote")}">${dict.home.ctaQuote}</a>`;
-    }
+    if (sticky) sticky.remove();
   }
 
   function applyFleetPage() {
@@ -582,19 +590,22 @@
     until.value = trip.until || "2026-07-27T10:00";
     oneway.checked = Boolean(trip.oneway) || trip.pickup !== trip.dropoff;
     winter.checked = Boolean(trip.winter) || isWinterSeason(from.value);
+    if (trip.premium) premium.checked = true;
     dropWrap.hidden = !oneway.checked;
 
     form.querySelector("#q-step1-label").textContent = q.step1;
     form.querySelector("#q-step2-label").textContent = q.step2;
     form.querySelector("#q-step3-label").textContent = q.step3;
+    form.querySelector("#q-step4-label").textContent = q.step4;
     form.querySelectorAll("[data-i18n]").forEach((el) => {
       const key = el.dataset.i18n;
       const parts = key.split(".");
       let cur = dict;
       for (const p of parts) cur = cur?.[p];
       if (typeof cur === "string") {
-        if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") el.placeholder = cur;
-        else el.textContent = cur;
+        if (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && el.type !== "radio" && el.type !== "checkbox")) {
+          if (el.placeholder !== undefined) el.placeholder = cur;
+        } else el.textContent = cur;
       }
     });
 
@@ -618,6 +629,21 @@
       show(3);
     });
     document.getElementById("back-2")?.addEventListener("click", () => show(2));
+    document.getElementById("to-step-4")?.addEventListener("click", () => {
+      const name = form.querySelector('[name="name"]');
+      const email = form.querySelector('[name="email"]');
+      const phone = form.querySelector('[name="phone"]');
+      if (!name.reportValidity() || !email.reportValidity() || !phone.reportValidity()) return;
+      TRIP.save({
+        ...readTrip(),
+        name: name.value.trim(),
+        email: email.value.trim(),
+        phone: phone.value.trim(),
+        notes: form.querySelector('[name="notes"]').value.trim(),
+      });
+      show(4);
+    });
+    document.getElementById("back-3")?.addEventListener("click", () => show(3));
 
     function readTrip() {
       const isOne = oneway.checked;
@@ -631,6 +657,7 @@
         premium: premium.checked,
         onewayFee: isOne ? onewayFee(pickup.value, dropoff.value) : 0,
         age21: true,
+        pay: form.querySelector('input[name="pay"]:checked')?.value || "mercadopago",
       };
     }
 
@@ -644,7 +671,7 @@
           const rental = c.daily * days;
           return `
             <label class="result-row" style="cursor:pointer">
-              <div class="thumb" style="background-image:url('${c.img}')"></div>
+              <div class="thumb fleet-photo" style="background-image:url('${carImg(c)}')"></div>
               <div>
                 <h3 style="margin:0">${label.name}${c.isNew ? ' <span class="badge-new">NEW</span>' : ""}</h3>
                 <p class="meta" style="margin:4px 0;color:var(--muted)">${label.similar}</p>
@@ -676,6 +703,7 @@
       const total = rental + fee + winterCost + premiumCost;
       const box = document.getElementById("quote-summary");
       const st = dict.stations;
+      const payLabel = cur.pay === "stripe" ? q.payStripe : q.payMp;
       box.innerHTML = `
         <dl>
           <div><dt>${dict.search.pickup}</dt><dd>${st[cur.pickup] || cur.pickup}</dd></div>
@@ -687,6 +715,7 @@
           <div><dt>${q.lineWinter}</dt><dd>${money(winterCost)}</dd></div>
           <div><dt>${q.linePremium}</dt><dd>${money(premiumCost)}</dd></div>
           <div><dt>${q.lineTotal}</dt><dd>${money(total)}</dd></div>
+          <div><dt>${q.step4}</dt><dd>${payLabel}</dd></div>
         </dl>
         <p style="margin:12px 0 0;font-size:.82rem;color:var(--muted)">${q.demoNote}</p>
         <p style="margin:6px 0 0;font-size:.82rem;color:var(--muted)">${q.mpNote}</p>
@@ -696,19 +725,19 @@
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const name = form.querySelector('[name="name"]').value.trim();
-      const email = form.querySelector('[name="email"]').value.trim();
-      const phone = form.querySelector('[name="phone"]').value.trim();
-      const notes = form.querySelector('[name="notes"]').value.trim();
-      TRIP.save({ ...readTrip(), name, email, phone, notes, status: "requested" });
+      const pay = form.querySelector('input[name="pay"]:checked')?.value || "mercadopago";
+      const stored = TRIP.load();
+      TRIP.save({ ...readTrip(), ...stored, pay, status: "checkout" });
       const snap = window.__readyQuoteTotal;
       const label = snap?.car ? carLabel(snap.car.id).name : "";
       const msg = encodeURIComponent(
-        `Ready quote request\n${name}\n${email} · ${phone}\n${dict.stations[snap.cur.pickup]} → ${dict.stations[snap.cur.dropoff]}\n${snap.cur.from} → ${snap.cur.until}\n${label}\nTotal indicativo: ${money(snap.total)}\n${notes}`
+        `Ready quote\n${stored.name || ""}\n${stored.email || ""} · ${stored.phone || ""}\n${dict.stations[snap.cur.pickup]} → ${dict.stations[snap.cur.dropoff]}\n${snap.cur.from} → ${snap.cur.until}\n${label}\nPay: ${pay}\nTotal: ${money(snap.total)}\n${stored.notes || ""}`
       );
       document.getElementById("success").hidden = false;
       document.getElementById("success-title").textContent = q.successTitle;
       document.getElementById("success-body").textContent = q.successBody;
+      document.getElementById("success-pay").textContent =
+        pay === "stripe" ? q.successPayStripe : q.successPayMp;
       const wa = document.getElementById("success-wa");
       wa.textContent = q.wa;
       wa.href = `https://wa.me/${DATA.whatsapp}?text=${msg}`;
@@ -718,9 +747,7 @@
 
     show(1);
     renderSummary();
-    if (TRIP.load().carId) {
-      renderCars();
-    }
+    if (TRIP.load().carId) renderCars();
   }
 
   function applyI18n() {

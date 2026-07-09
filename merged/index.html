@@ -20,17 +20,21 @@
         <p class="eyebrow" id="eyebrow" style="color:rgba(255,255,255,.85)"></p>
         <h1 id="hero-title">Ready</h1>
         <p class="lede" id="hero-lede"></p>
-        <div style="display:flex;flex-wrap:wrap;gap:12px">
+        <div class="hero-cta-row">
           <a class="btn btn-ember btn-lg" href="quote.html" id="cta-quote"></a>
           <a class="btn btn-ghost-light" href="routes.html" id="cta-routes"></a>
         </div>
       </div>
 
-      <form class="search-card" id="home-search" aria-label="Trip search">
-        <div class="search-grid">
-          <div class="field">
+      <div class="search-float" id="search-float">
+        <form class="search-bar" id="home-search" aria-label="Trip search">
+          <div class="field grow">
             <label for="pickup" id="label-pickup">Pick-up</label>
             <select id="pickup" name="pickup"></select>
+          </div>
+          <div class="field drop-inline" data-drop-wrap>
+            <label for="dropoff" id="label-dropoff">Drop-off</label>
+            <select id="dropoff" name="dropoff"></select>
           </div>
           <div class="field">
             <label for="from" id="label-from">From</label>
@@ -40,20 +44,16 @@
             <label for="until" id="label-until">Until</label>
             <input id="until" name="until" type="datetime-local" />
           </div>
-          <button type="submit" class="btn btn-ember" id="search-submit">Get quote</button>
+          <button type="submit" class="btn btn-ember btn-search" id="search-submit">Get quote</button>
+        </form>
+        <div class="search-meta">
+          <label class="check"><input type="checkbox" name="oneway" form="home-search" id="oneway" /> <span id="label-oneway">One-way</span></label>
+          <label class="check"><input type="checkbox" name="age21" form="home-search" checked /> <span id="label-age21">21+</span></label>
+          <label class="check"><input type="checkbox" name="winter" form="home-search" id="winter" /> <span id="label-winter">Winter</span></label>
+          <span class="search-chip" data-oneway-fee></span>
+          <span class="search-chip winter" data-winter-banner></span>
         </div>
-        <div class="search-extras">
-          <label class="check"><input type="checkbox" name="oneway" /> <span id="label-oneway">One-way</span></label>
-          <label class="check"><input type="checkbox" name="age21" checked /> <span id="label-age21">21+</span></label>
-          <label class="check"><input type="checkbox" name="winter" /> <span id="label-winter">Winter</span></label>
-          <div class="field" data-drop-wrap hidden style="min-width:220px;flex:1">
-            <label for="dropoff" id="label-dropoff">Drop-off</label>
-            <select id="dropoff" name="dropoff"></select>
-          </div>
-          <div class="oneway-fee" data-oneway-fee></div>
-          <div class="winter-banner" data-winter-banner></div>
-        </div>
-      </form>
+      </div>
     </section>
 
     <div class="strip" aria-label="Highlights">
@@ -88,7 +88,7 @@
 
     <div class="trust-mp">
       <div>
-        <span class="mp-badge">Mercado Pago</span>
+        <span class="mp-badge">Mercado Pago · Stripe</span>
         <h2 id="mp-title" style="color:#fff;margin-top:12px"></h2>
         <p id="mp-lede"></p>
       </div>
