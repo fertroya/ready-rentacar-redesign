@@ -688,7 +688,6 @@ h3 { font-size: 1.25rem; margin: 0 0 8px; }
     justify-content: flex-end;
   }
   .hero h1 { font-size: clamp(3.8rem, 17vw, 5.2rem); }
-  .hero-cta-row { display: none; }
   .search-dock {
     margin-top: -48px;
     padding: 0 16px;
