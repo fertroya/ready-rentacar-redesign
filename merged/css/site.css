@@ -405,6 +405,44 @@ h3 { font-size: 1.25rem; margin: 0 0 8px; }
 .faq summary { cursor: pointer; font-weight: 600; }
 .faq p { margin: 8px 0 0; color: var(--muted); }
 
+.extra-card {
+  background: var(--snow); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; display: flex; flex-direction: column; gap: 8px; min-height: 100%;
+}
+.extra-card .extra-icon {
+  width: 44px; height: 44px; border-radius: 12px; background: #eef5f2;
+  display: grid; place-items: center; font-size: 1.25rem;
+}
+.extra-card h3 { margin: 0; font-size: 1.05rem; }
+.extra-card p { margin: 0; color: var(--muted); font-size: .9rem; flex: 1; }
+.extra-card .extra-meta {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  margin-top: 4px; font-size: .88rem; font-weight: 600;
+}
+.extra-card .tag-season {
+  font-size: .68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+  color: #1a4a5c; background: #eef5f9; border-radius: 999px; padding: 3px 8px;
+}
+.extras-picker { display: grid; gap: 10px; }
+.extra-row {
+  display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center;
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fff;
+}
+.extra-row.is-on { border-color: var(--lake); background: #f4faf7; }
+.extra-row .extra-icon { font-size: 1.2rem; text-align: center; }
+.extra-row h4 { margin: 0; font-size: .95rem; }
+.extra-row p { margin: 2px 0 0; color: var(--muted); font-size: .82rem; }
+.extra-qty {
+  display: flex; align-items: center; gap: 8px;
+}
+.extra-qty label { font-size: .75rem; color: var(--muted); font-weight: 600; }
+.extra-qty select {
+  font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 64px;
+}
+.summary-extras { margin: 8px 0 0; padding: 0; list-style: none; font-size: .85rem; color: var(--ink); }
+.summary-extras li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+.summary-extras li span:last-child { font-weight: 600; white-space: nowrap; }
+
 .quote-layout {
   display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; align-items: start;
 }

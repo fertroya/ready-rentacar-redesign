@@ -21,8 +21,9 @@
         <div class="steps">
           <span class="step-pill is-active" data-qstep="1" id="q-step1-label">1 · Trip</span>
           <span class="step-pill" data-qstep="2" id="q-step2-label">2 · Vehicle</span>
-          <span class="step-pill" data-qstep="3" id="q-step3-label">3 · Details</span>
-          <span class="step-pill" data-qstep="4" id="q-step4-label">4 · Pay</span>
+          <span class="step-pill" data-qstep="3" id="q-step3-label">3 · Extras</span>
+          <span class="step-pill" data-qstep="4" id="q-step4-label">4 · Details</span>
+          <span class="step-pill" data-qstep="5" id="q-step5-label">5 · Pay</span>
         </div>
 
         <div data-qpanel="1">
@@ -50,7 +51,11 @@
           </div>
           <label class="check" style="margin-bottom:10px">
             <input type="checkbox" name="winter" />
-            <span data-i18n="search.winter">Winter</span>
+            <span data-i18n="search.winter">Snow chains (winter)</span>
+          </label>
+          <label class="check" style="margin-bottom:10px">
+            <input type="checkbox" name="wantChild" />
+            <span data-i18n="search.childSeat">Child seat needed</span>
           </label>
           <label class="check" style="margin-bottom:16px">
             <input type="checkbox" name="premium" />
@@ -63,11 +68,21 @@
           <div id="quote-cars"></div>
           <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
             <button type="button" class="btn btn-ghost" id="back-1" data-i18n="quotePage.back">Back</button>
-            <button type="button" class="btn btn-ember" id="to-step-3" data-i18n="quotePage.continue">Continue</button>
+            <button type="button" class="btn btn-ember" id="to-step-3" data-i18n="quotePage.showExtras">Continue to extras</button>
           </div>
         </div>
 
         <div data-qpanel="3" hidden>
+          <p data-i18n="quotePage.extrasLede" style="margin:0 0 14px;color:var(--muted)"></p>
+          <div id="quote-extras" class="extras-picker"></div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px">
+            <button type="button" class="btn btn-ghost" id="back-2" data-i18n="quotePage.back">Back</button>
+            <button type="button" class="btn btn-ghost" id="skip-extras" data-i18n="quotePage.skipExtras">No extras — continue</button>
+            <button type="button" class="btn btn-ember" id="to-step-4" data-i18n="quotePage.continue">Continue</button>
+          </div>
+        </div>
+
+        <div data-qpanel="4" hidden>
           <div class="field" style="margin-bottom:12px">
             <label data-i18n="quotePage.name">Name</label>
             <input name="name" required />
@@ -85,12 +100,12 @@
             <textarea name="notes" rows="3" data-i18n="quotePage.notesPh"></textarea>
           </div>
           <div style="display:flex;gap:10px;justify-content:flex-end">
-            <button type="button" class="btn btn-ghost" id="back-2" data-i18n="quotePage.back">Back</button>
-            <button type="button" class="btn btn-ember" id="to-step-4" data-i18n="quotePage.continue">Continue</button>
+            <button type="button" class="btn btn-ghost" id="back-3" data-i18n="quotePage.back">Back</button>
+            <button type="button" class="btn btn-ember" id="to-step-5" data-i18n="quotePage.continue">Continue</button>
           </div>
         </div>
 
-        <div data-qpanel="4" hidden>
+        <div data-qpanel="5" hidden>
           <p data-i18n="quotePage.payLede" style="margin:0 0 8px;color:var(--muted)"></p>
           <div class="pay-methods" role="radiogroup" aria-label="Payment">
             <label class="pay-option">
@@ -117,7 +132,7 @@
             </label>
           </div>
           <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
-            <button type="button" class="btn btn-ghost" id="back-3" data-i18n="quotePage.back">Back</button>
+            <button type="button" class="btn btn-ghost" id="back-4" data-i18n="quotePage.back">Back</button>
             <button type="submit" class="btn btn-ember" data-i18n="quotePage.payCta">Confirm &amp; pay</button>
           </div>
         </div>

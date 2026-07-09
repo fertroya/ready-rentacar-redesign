@@ -50,6 +50,8 @@
       fleet: "fleet.html",
       stations: "stations.html",
       routes: "routes.html",
+      extras: "extras.html",
+      promos: "promos.html",
       services: "services.html",
       corporate: "corporate.html",
       quote: "quote.html",
@@ -57,6 +59,41 @@
       contact: "contact.html",
     };
     return `${BASE}${map[page] || "index.html"}?lang=${lang}`;
+  }
+
+  function extraCopy(id) {
+    return t().extras?.[id] || { name: id, desc: "" };
+  }
+
+  function normalizeExtras(raw) {
+    const map = raw && typeof raw === "object" ? raw : {};
+    const out = {};
+    DATA.extras.forEach((ex) => {
+      const n = Math.max(0, Math.min(ex.maxQty, Number(map[ex.id]) || 0));
+      if (n > 0) out[ex.id] = n;
+    });
+    return out;
+  }
+
+  function extrasCost(extrasMap, days) {
+    let total = 0;
+    const lines = [];
+    const map = normalizeExtras(extrasMap);
+    DATA.extras.forEach((ex) => {
+      const qty = map[ex.id] || 0;
+      if (!qty) return;
+      const line = ex.amount * days * qty;
+      total += line;
+      lines.push({ id: ex.id, qty, amount: line, name: extraCopy(ex.id).name });
+    });
+    return { total, lines };
+  }
+
+  function seedExtrasFromFlags(trip) {
+    const extras = normalizeExtras(trip.extras);
+    if (trip.winter && !extras.chains) extras.chains = 1;
+    if (trip.wantChild && !extras.child && !extras.infant && !extras.booster) extras.child = 1;
+    return extras;
   }
 
   function money(n) {
@@ -109,6 +146,8 @@
       ["fleet", dict.nav.fleet],
       ["stations", dict.nav.stations],
       ["routes", dict.nav.routes],
+      ["extras", dict.nav.extras],
+      ["promos", dict.nav.promos],
       ["services", dict.nav.services],
       ["corporate", dict.nav.corporate],
       ["faqs", dict.nav.faqs],
@@ -180,6 +219,8 @@
           <ul>
             <li><a href="${href("quote")}">${dict.nav.quote}</a></li>
             <li><a href="${href("fleet")}">${dict.nav.fleet}</a></li>
+            <li><a href="${href("extras")}">${dict.nav.extras}</a></li>
+            <li><a href="${href("promos")}">${dict.nav.promos}</a></li>
             <li><a href="${href("stations")}">${dict.nav.stations}</a></li>
             <li><a href="${href("routes")}">${dict.nav.routes}</a></li>
           </ul>
@@ -219,6 +260,7 @@
     const from = form.querySelector('[name="from"]');
     const until = form.querySelector('[name="until"]');
     const winter = document.getElementById("winter") || form.querySelector('[name="winter"]');
+    const wantChild = document.getElementById("wantChild") || form.querySelector('[name="wantChild"]');
     const feeBox = document.querySelector("[data-oneway-fee]");
     const winterBox = document.querySelector("[data-winter-banner]");
 
@@ -230,6 +272,7 @@
     if (dropoff) dropoff.innerHTML = stationOptions(trip.dropoff || "fte", true);
     if (oneway) oneway.checked = Boolean(trip.oneway) || (trip.pickup && trip.dropoff && trip.pickup !== trip.dropoff);
     if (winter) winter.checked = Boolean(trip.winter) || isWinterSeason(defaultFrom);
+    if (wantChild) wantChild.checked = Boolean(trip.wantChild) || Boolean(trip.extras?.child || trip.extras?.infant || trip.extras?.booster);
 
     function sync() {
       const isOne = oneway?.checked;
@@ -268,9 +311,11 @@
         from: from.value,
         until: until.value,
         winter: Boolean(winter?.checked),
+        wantChild: Boolean(wantChild?.checked),
         age21: Boolean(document.querySelector('[name="age21"]')?.checked),
         onewayFee: isOne ? onewayFee(pickup.value, dropoff.value) : 0,
       };
+      payload.extras = seedExtrasFromFlags(payload);
       TRIP.save(payload);
       location.href = href("quote");
     });
@@ -400,9 +445,38 @@
       "label-oneway": search.oneway,
       "label-age21": search.age21,
       "label-winter": search.winter,
+      "label-child": search.childSeat,
       "search-submit": search.submit,
+      "extras-title": dict.home.extrasTitle,
+      "extras-lede": dict.home.extrasLede,
     };
     Object.entries(mapLabel).forEach(([id, val]) => set(id, val));
+
+    const homeExtras = document.getElementById("home-extras");
+    if (homeExtras) {
+      const exDict = dict.extras;
+      homeExtras.innerHTML = DATA.extras
+        .filter((ex) => ex.common)
+        .map((ex) => {
+          const copy = exDict[ex.id] || { name: ex.id, desc: "" };
+          return `
+            <article class="extra-card">
+              <div class="extra-icon" aria-hidden="true">${ex.icon}</div>
+              <h3>${copy.name}</h3>
+              <p>${copy.desc}</p>
+              <div class="extra-meta">
+                <span>${money(ex.amount)}${exDict.perDay}</span>
+                ${ex.seasonal ? `<span class="tag-season">${exDict.seasonal}</span>` : ""}
+              </div>
+            </article>`;
+        })
+        .join("");
+    }
+    const extrasMore = document.getElementById("extras-more");
+    if (extrasMore) {
+      extrasMore.href = href("extras");
+      extrasMore.textContent = dict.home.extrasCta + " →";
+    }
 
     const routes = document.getElementById("route-grid");
     if (routes) {
@@ -567,6 +641,57 @@
       .join("");
   }
 
+  function applyExtrasPage() {
+    const dict = t();
+    const page = dict.extrasPage;
+    document.getElementById("page-title").textContent = page.title;
+    document.getElementById("page-lede").textContent = page.lede;
+    const cta = document.getElementById("extras-cta");
+    if (cta) {
+      cta.textContent = page.cta;
+      cta.href = href("quote");
+    }
+    const grid = document.getElementById("extras-grid");
+    if (!grid) return;
+    const exDict = dict.extras;
+    grid.innerHTML = DATA.extras
+      .map((ex) => {
+        const copy = exDict[ex.id] || { name: ex.id, desc: "" };
+        return `
+          <article class="extra-card">
+            <div class="extra-icon" aria-hidden="true">${ex.icon}</div>
+            <h3>${copy.name}</h3>
+            <p>${copy.desc}</p>
+            <div class="extra-meta">
+              <span>${money(ex.amount)}${exDict.perDay}</span>
+              ${ex.seasonal ? `<span class="tag-season">${exDict.seasonal}</span>` : ""}
+            </div>
+          </article>`;
+      })
+      .join("");
+  }
+
+  function applyPromosPage() {
+    const dict = t().promosPage;
+    document.getElementById("page-title").textContent = dict.title;
+    document.getElementById("page-lede").textContent = dict.lede;
+    const grid = document.getElementById("promos-grid");
+    if (!grid) return;
+    grid.innerHTML = DATA.promotions
+      .map((p) => {
+        const copy = dict[p.id] || { t: p.id, d: "" };
+        return `
+          <article class="extra-card">
+            <h3>${copy.t}</h3>
+            <p>${copy.d}</p>
+            <div class="extra-meta">
+              <a class="btn btn-solid btn-sm" href="${p.href}" target="_blank" rel="noopener">${dict.open}</a>
+            </div>
+          </article>`;
+      })
+      .join("");
+  }
+
   function applyContactPage() {
     const dict = t().contactPage;
     document.getElementById("page-title").textContent = dict.title;
@@ -590,6 +715,9 @@
     const trip = TRIP.load();
     const urlCar = new URL(location.href).searchParams.get("car");
     if (urlCar) TRIP.save({ carId: urlCar });
+    if (!trip.extras || !Object.keys(trip.extras).length) {
+      TRIP.save({ extras: seedExtrasFromFlags(trip) });
+    }
 
     let step = 1;
     const panels = [...document.querySelectorAll("[data-qpanel]")];
@@ -601,6 +729,7 @@
         p.hidden = Number(p.dataset.qpanel) !== n;
       });
       pills.forEach((p) => p.classList.toggle("is-active", Number(p.dataset.qstep) === n));
+      if (n === 3) renderExtras();
       renderSummary();
     }
 
@@ -611,6 +740,7 @@
     const from = form.querySelector('[name="from"]');
     const until = form.querySelector('[name="until"]');
     const winter = form.querySelector('[name="winter"]');
+    const wantChild = form.querySelector('[name="wantChild"]');
     const premium = form.querySelector('[name="premium"]');
     const dropWrap = form.querySelector("[data-drop-wrap]");
 
@@ -620,6 +750,11 @@
     until.value = trip.until || "2026-07-27T10:00";
     oneway.checked = Boolean(trip.oneway) || trip.pickup !== trip.dropoff;
     winter.checked = Boolean(trip.winter) || isWinterSeason(from.value);
+    if (wantChild) {
+      wantChild.checked =
+        Boolean(trip.wantChild) ||
+        Boolean(trip.extras?.child || trip.extras?.infant || trip.extras?.booster);
+    }
     if (trip.premium) premium.checked = true;
     dropWrap.hidden = !oneway.checked;
 
@@ -627,6 +762,7 @@
     form.querySelector("#q-step2-label").textContent = q.step2;
     form.querySelector("#q-step3-label").textContent = q.step3;
     form.querySelector("#q-step4-label").textContent = q.step4;
+    form.querySelector("#q-step5-label").textContent = q.step5;
     form.querySelectorAll("[data-i18n]").forEach((el) => {
       const key = el.dataset.i18n;
       const parts = key.split(".");
@@ -646,7 +782,11 @@
     form.addEventListener("change", renderSummary);
 
     document.getElementById("to-step-2")?.addEventListener("click", () => {
-      TRIP.save(readTrip());
+      const payload = readTrip();
+      if (payload.winter || payload.wantChild) {
+        payload.extras = seedExtrasFromFlags({ ...TRIP.load(), ...payload });
+      }
+      TRIP.save(payload);
       renderCars();
       show(2);
     });
@@ -660,20 +800,30 @@
     });
     document.getElementById("back-2")?.addEventListener("click", () => show(2));
     document.getElementById("to-step-4")?.addEventListener("click", () => {
+      TRIP.save({ extras: readExtrasFromUi() });
+      show(4);
+    });
+    document.getElementById("skip-extras")?.addEventListener("click", () => {
+      TRIP.save({ extras: {} });
+      show(4);
+    });
+    document.getElementById("back-3")?.addEventListener("click", () => show(3));
+    document.getElementById("to-step-5")?.addEventListener("click", () => {
       const name = form.querySelector('[name="name"]');
       const email = form.querySelector('[name="email"]');
       const phone = form.querySelector('[name="phone"]');
       if (!name.reportValidity() || !email.reportValidity() || !phone.reportValidity()) return;
       TRIP.save({
         ...readTrip(),
+        extras: TRIP.load().extras || {},
         name: name.value.trim(),
         email: email.value.trim(),
         phone: phone.value.trim(),
         notes: form.querySelector('[name="notes"]').value.trim(),
       });
-      show(4);
+      show(5);
     });
-    document.getElementById("back-3")?.addEventListener("click", () => show(3));
+    document.getElementById("back-4")?.addEventListener("click", () => show(4));
 
     function readTrip() {
       const isOne = oneway.checked;
@@ -684,11 +834,71 @@
         from: from.value,
         until: until.value,
         winter: winter.checked,
+        wantChild: Boolean(wantChild?.checked),
         premium: premium.checked,
         onewayFee: isOne ? onewayFee(pickup.value, dropoff.value) : 0,
         age21: true,
         pay: form.querySelector('input[name="pay"]:checked')?.value || "mercadopago",
       };
+    }
+
+    function readExtrasFromUi() {
+      const box = document.getElementById("quote-extras");
+      if (!box) return normalizeExtras(TRIP.load().extras);
+      const map = {};
+      box.querySelectorAll("[data-extra-id]").forEach((sel) => {
+        const id = sel.dataset.extraId;
+        const qty = Number(sel.value) || 0;
+        if (qty > 0) map[id] = qty;
+      });
+      return normalizeExtras(map);
+    }
+
+    function renderExtras() {
+      const list = document.getElementById("quote-extras");
+      if (!list) return;
+      const selected = normalizeExtras(TRIP.load().extras);
+      const exDict = dict.extras;
+      list.innerHTML = DATA.extras
+        .map((ex) => {
+          const copy = exDict[ex.id] || { name: ex.id, desc: "" };
+          const qty = selected[ex.id] || 0;
+          const opts = Array.from({ length: ex.maxQty + 1 }, (_, i) => {
+            return `<option value="${i}" ${i === qty ? "selected" : ""}>${i}</option>`;
+          }).join("");
+          return `
+            <div class="extra-row ${qty ? "is-on" : ""}" data-extra-row="${ex.id}">
+              <div class="extra-icon" aria-hidden="true">${ex.icon}</div>
+              <div>
+                <h4>${copy.name}${ex.seasonal ? ` · ${exDict.seasonal}` : ""}</h4>
+                <p>${copy.desc} · ${money(ex.amount)}${exDict.perDay}</p>
+              </div>
+              <div class="extra-qty">
+                <label for="extra-${ex.id}">${exDict.qty}</label>
+                <select id="extra-${ex.id}" data-extra-id="${ex.id}">${opts}</select>
+              </div>
+            </div>`;
+        })
+        .join("");
+      list.querySelectorAll("[data-extra-id]").forEach((sel) => {
+        sel.addEventListener("change", () => {
+          const map = readExtrasFromUi();
+          TRIP.save({
+            extras: map,
+            winter: Boolean(map.chains) || winter.checked,
+            wantChild: Boolean(map.child || map.infant || map.booster) || Boolean(wantChild?.checked),
+          });
+          if (map.chains) winter.checked = true;
+          if (map.child || map.infant || map.booster) {
+            if (wantChild) wantChild.checked = true;
+          }
+          list.querySelectorAll("[data-extra-row]").forEach((row) => {
+            const id = row.dataset.extraRow;
+            row.classList.toggle("is-on", Boolean(map[id]));
+          });
+          renderSummary();
+        });
+      });
     }
 
     function renderCars() {
@@ -723,17 +933,26 @@
     }
 
     function renderSummary() {
-      const cur = { ...TRIP.load(), ...readTrip() };
+      const stored = TRIP.load();
+      const cur = { ...stored, ...readTrip(), extras: stored.extras || {} };
+      if (step === 3) cur.extras = readExtrasFromUi();
       const car = DATA.cars.find((c) => c.id === cur.carId);
       const days = daysBetween(cur.from, cur.until);
       const rental = car ? car.daily * days : 0;
       const fee = cur.oneway ? onewayFee(cur.pickup, cur.dropoff) : 0;
-      const winterCost = cur.winter ? DATA.winterDaily * days : 0;
       const premiumCost = cur.premium ? DATA.premiumDaily * days : 0;
-      const total = rental + fee + winterCost + premiumCost;
+      const { total: extrasTotal, lines: extrasLines } = extrasCost(cur.extras, days);
+      // Avoid double-counting: chains live in extras; winter checkbox only seeds chains
+      const winterCost = 0;
+      const total = rental + fee + winterCost + premiumCost + extrasTotal;
       const box = document.getElementById("quote-summary");
       const st = dict.stations;
       const payLabel = cur.pay === "stripe" ? q.payStripe : q.payMp;
+      const extrasHtml = extrasLines.length
+        ? `<ul class="summary-extras">${extrasLines
+            .map((l) => `<li><span>${l.name}${l.qty > 1 ? ` ×${l.qty}` : ""}</span><span>${money(l.amount)}</span></li>`)
+            .join("")}</ul>`
+        : "";
       box.innerHTML = `
         <dl>
           <div><dt>${dict.search.pickup}</dt><dd>${st[cur.pickup] || cur.pickup}</dd></div>
@@ -742,15 +961,27 @@
           <div><dt>${dict.search.until}</dt><dd>${cur.until?.replace("T", " ") || "—"}</dd></div>
           <div><dt>${q.lineRental}</dt><dd>${car ? money(rental) : "—"}</dd></div>
           <div><dt>${q.lineOneway}</dt><dd>${money(fee)}</dd></div>
-          <div><dt>${q.lineWinter}</dt><dd>${money(winterCost)}</dd></div>
+          <div><dt>${q.lineExtras}</dt><dd>${money(extrasTotal)}</dd></div>
           <div><dt>${q.linePremium}</dt><dd>${money(premiumCost)}</dd></div>
           <div><dt>${q.lineTotal}</dt><dd>${money(total)}</dd></div>
-          <div><dt>${q.step4}</dt><dd>${payLabel}</dd></div>
+          <div><dt>${q.step5}</dt><dd>${payLabel}</dd></div>
         </dl>
+        ${extrasHtml}
         <p style="margin:12px 0 0;font-size:.82rem;color:var(--muted)">${q.demoNote}</p>
         <p style="margin:6px 0 0;font-size:.82rem;color:var(--muted)">${q.mpNote}</p>
       `;
-      window.__readyQuoteTotal = { cur, car, days, rental, fee, winterCost, premiumCost, total };
+      window.__readyQuoteTotal = {
+        cur,
+        car,
+        days,
+        rental,
+        fee,
+        winterCost,
+        premiumCost,
+        extrasTotal,
+        extrasLines,
+        total,
+      };
     }
 
     form.addEventListener("submit", (e) => {
@@ -760,8 +991,9 @@
       TRIP.save({ ...readTrip(), ...stored, pay, status: "checkout" });
       const snap = window.__readyQuoteTotal;
       const label = snap?.car ? carLabel(snap.car.id).name : "";
+      const extrasTxt = (snap?.extrasLines || []).map((l) => `${l.name}×${l.qty}`).join(", ");
       const msg = encodeURIComponent(
-        `Ready quote\n${stored.name || ""}\n${stored.email || ""} · ${stored.phone || ""}\n${dict.stations[snap.cur.pickup]} → ${dict.stations[snap.cur.dropoff]}\n${snap.cur.from} → ${snap.cur.until}\n${label}\nPay: ${pay}\nTotal: ${money(snap.total)}\n${stored.notes || ""}`
+        `Ready quote\n${stored.name || ""}\n${stored.email || ""} · ${stored.phone || ""}\n${dict.stations[snap.cur.pickup]} → ${dict.stations[snap.cur.dropoff]}\n${snap.cur.from} → ${snap.cur.until}\n${label}\nExtras: ${extrasTxt || "—"}\nPay: ${pay}\nTotal: ${money(snap.total)}\n${stored.notes || ""}`
       );
       document.getElementById("success").hidden = false;
       document.getElementById("success-title").textContent = q.successTitle;
@@ -788,6 +1020,8 @@
     if (page === "fleet") applyFleetPage();
     if (page === "stations") applyStationsPage();
     if (page === "routes") applyRoutesPage();
+    if (page === "extras") applyExtrasPage();
+    if (page === "promos") applyPromosPage();
     if (page === "services") applyServicesPage();
     if (page === "corporate") applyCorporatePage();
     if (page === "faqs") applyFaqsPage();
