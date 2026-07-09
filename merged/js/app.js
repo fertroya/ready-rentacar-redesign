@@ -203,7 +203,7 @@
             <img src="${BASE}../assets/logo.png" alt="" width="44" height="44" />
             <div>
               <strong>Ready Rent-a-Car</strong>
-              <div style="color:var(--muted);font-size:.85rem">${dict.footer.tag}</div>
+              <div class="footer-tag">${dict.footer.tag}</div>
             </div>
           </a>
           <div class="integrations">
