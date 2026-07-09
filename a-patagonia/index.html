@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ready Rent-a-Car · Patagonia Editorial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip" href="#search">Skip to search</a>
+
+  <header class="nav">
+    <a class="brand" href="./">
+      <img src="../assets/logo-alt.png" alt="Ready Rent-a-Car" width="140" height="70" />
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#fleet">Fleet</a>
+      <a href="#routes">Routes</a>
+      <a href="#stations">Stations</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="nav-actions">
+      <button type="button" class="lang" aria-label="Language">EN</button>
+      <a class="btn btn-ghost" href="https://wa.me/5492944158889" target="_blank" rel="noopener">WhatsApp</a>
+      <a class="btn btn-solid" href="#search">Book</a>
+    </div>
+    <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+  </header>
+
+  <main>
+    <section class="hero" aria-label="Hero">
+      <div class="hero-media" role="img" aria-label="Nahuel Huapi lake and mountains near Bariloche"></div>
+      <div class="hero-veil"></div>
+      <div class="hero-content">
+        <p class="eyebrow">Patagonia · Airport pickup</p>
+        <h1>Ready</h1>
+        <p class="hero-sub">Your car for the lakes, the steppe, and the end of the world.</p>
+        <div class="hero-cta-row">
+          <a class="btn btn-solid btn-lg" href="#search">Plan your trip</a>
+          <a class="btn btn-ghost-light" href="#routes">Explore routes</a>
+        </div>
+      </div>
+
+      <form class="search-bar" id="search" aria-label="Trip search">
+        <div class="field grow">
+          <label for="pickup">Pick-up</label>
+          <select id="pickup" name="pickup">
+            <option value="brc">Bariloche Airport (BRC)</option>
+            <option value="cpc">San Martín · Chapelco (CPC)</option>
+            <option value="eqs">Esquel Airport (EQS)</option>
+            <option value="fte">El Calafate Airport (FTE)</option>
+            <option value="ush">Ushuaia Airport (USH)</option>
+            <option value="mdz">Mendoza Airport (MDZ)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="from">From</label>
+          <input id="from" type="datetime-local" value="2026-07-20T10:00" />
+        </div>
+        <div class="field">
+          <label for="to">Until</label>
+          <input id="to" type="datetime-local" value="2026-07-27T10:00" />
+        </div>
+        <div class="field toggle-field">
+          <label class="check">
+            <input type="checkbox" id="oneway" />
+            One-way
+          </label>
+        </div>
+        <div class="field drop-field" hidden>
+          <label for="dropoff">Drop-off</label>
+          <select id="dropoff" name="dropoff">
+            <option value="brc">Bariloche Airport (BRC)</option>
+            <option value="cpc">San Martín · Chapelco (CPC)</option>
+            <option value="eqs">Esquel Airport (EQS)</option>
+            <option value="fte">El Calafate Airport (FTE)</option>
+            <option value="ush">Ushuaia Airport (USH)</option>
+            <option value="mdz">Mendoza Airport (MDZ)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-ember btn-search">Search cars</button>
+      </form>
+    </section>
+
+    <section class="trust-strip" aria-label="Why Ready">
+      <div class="trust-item"><strong>Airport meet</strong><span>BRC · CPC · FTE · USH · EQS · MDZ</span></div>
+      <div class="trust-item"><strong>WhatsApp ops</strong><span>+54 9 294 415-8889</span></div>
+      <div class="trust-item"><strong>Trip-ready fleet</strong><span>SUV · 4×4 · van · pickup</span></div>
+      <div class="trust-item"><strong>Free cancel</strong><span>Up to 48h before pickup</span></div>
+    </section>
+
+    <section class="section" id="routes">
+      <div class="section-head">
+        <h2>Drive the trip, not just the car</h2>
+        <p>Choose how you travel Patagonia — we match the vehicle to the road.</p>
+      </div>
+      <div class="route-grid">
+        <article class="route-card route-lakes">
+          <h3>Lakes Circuit</h3>
+          <p>Bariloche → Villa La Angostura → Seven Lakes. Comfort SUV, automatic.</p>
+          <span class="chip">3–5 days · BRC</span>
+        </article>
+        <article class="route-card route-ruta40">
+          <h3>Ruta 40 South</h3>
+          <p>Steppe winds, long distances. Pickup or 4×4 with diesel range.</p>
+          <span class="chip">7–14 days · one-way ready</span>
+        </article>
+        <article class="route-card route-winter">
+          <h3>Winter powder</h3>
+          <p>Chapelco &amp; Catedral season. Chains / winter prep on request.</p>
+          <span class="chip">Jun–Sep · CPC / BRC</span>
+        </article>
+        <article class="route-card route-fin">
+          <h3>Fin del Mundo</h3>
+          <p>Ushuaia airport in, explore Tierra del Fuego in a capable SUV.</p>
+          <span class="chip">USH · city + park</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="section muted" id="fleet">
+      <div class="section-head">
+        <h2>Fleet for Patagonia roads</h2>
+        <p>Categories shaped by real trips — not generic ACRISS jargon alone.</p>
+      </div>
+      <div class="trip-chips" role="tablist" aria-label="Trip fit">
+        <button type="button" class="chip-btn active" data-filter="all">All</button>
+        <button type="button" class="chip-btn" data-filter="suv">SUV</button>
+        <button type="button" class="chip-btn" data-filter="4x4">4×4</button>
+        <button type="button" class="chip-btn" data-filter="family">Family</button>
+        <button type="button" class="chip-btn" data-filter="pickup">Pickup</button>
+      </div>
+      <div class="fleet-grid">
+        <article class="fleet-card" data-tags="suv">
+          <div class="fleet-img" style="--img:url('https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=900&q=80')"></div>
+          <div class="fleet-body">
+            <h3>SUV Automatic</h3>
+            <p class="or-similar">Tracker or similar</p>
+            <ul class="specs"><li>5 seats</li><li>Auto</li><li>Petrol</li></ul>
+            <div class="fleet-foot">
+              <span class="price">from <strong>ARS · quote</strong></span>
+              <a class="btn btn-solid btn-sm" href="#search">Select</a>
+            </div>
+          </div>
+        </article>
+        <article class="fleet-card" data-tags="suv">
+          <div class="fleet-img" style="--img:url('https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=900&q=80')"></div>
+          <div class="fleet-body">
+            <h3>SUV AT Premium</h3>
+            <p class="or-similar">Corolla Cross or similar</p>
+            <ul class="specs"><li>5 seats</li><li>Auto</li><li>Comfort</li></ul>
+            <div class="fleet-foot">
+              <span class="price">from <strong>ARS · quote</strong></span>
+              <a class="btn btn-solid btn-sm" href="#search">Select</a>
+            </div>
+          </div>
+        </article>
+        <article class="fleet-card" data-tags="family">
+          <div class="fleet-img" style="--img:url('https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=900&q=80')"></div>
+          <div class="fleet-body">
+            <h3>Minivan 7</h3>
+            <p class="or-similar">Spin 7 AT or similar</p>
+            <ul class="specs"><li>7 seats</li><li>Auto</li><li>Family</li></ul>
+            <div class="fleet-foot">
+              <span class="price">from <strong>ARS · quote</strong></span>
+              <a class="btn btn-solid btn-sm" href="#search">Select</a>
+            </div>
+          </div>
+        </article>
+        <article class="fleet-card" data-tags="family">
+          <div class="fleet-img" style="--img:url('https://images.unsplash.com/photo-1527786356703-4b100091cd2c?auto=format&fit=crop&w=900&q=80')"></div>
+          <div class="fleet-body">
+            <h3>Van 9</h3>
+            <p class="or-similar">Hiace AT or similar</p>
+            <ul class="specs"><li>9 seats</li><li>Auto</li><li>Diesel</li></ul>
+            <div class="fleet-foot">
+              <span class="price">from <strong>ARS · quote</strong></span>
+              <a class="btn btn-solid btn-sm" href="#search">Select</a>
+            </div>
+          </div>
+        </article>
+        <article class="fleet-card" data-tags="pickup 4x4">
+          <div class="fleet-img" style="--img:url('https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=900&q=80')"></div>
+          <div class="fleet-body">
+            <h3>Pickup 4×4 Auto</h3>
+            <p class="or-similar">Hilux 4×4 AT or similar</p>
+            <ul class="specs"><li>5 seats</li><li>4×4</li><li>Diesel</li></ul>
+            <div class="fleet-foot">
+              <span class="price">from <strong>ARS · quote</strong></span>
+              <a class="btn btn-solid btn-sm" href="#search">Select</a>
+            </div>
+          </div>
+        </article>
+        <article class="fleet-card" data-tags="4x4">
+          <div class="fleet-img" style="--img:url('https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=900&q=80')"></div>
+          <div class="fleet-body">
+            <h3>Luxury 4×4</h3>
+            <p class="or-similar">SW4 4×4 AT or similar</p>
+            <ul class="specs"><li>7 seats</li><li>4×4</li><li>Diesel</li></ul>
+            <div class="fleet-foot">
+              <span class="price">from <strong>ARS · quote</strong></span>
+              <a class="btn btn-solid btn-sm" href="#search">Select</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="stations">
+      <div class="section-head">
+        <h2>Where we meet you</h2>
+        <p>Airport-first stations across Argentine Patagonia and Cuyo.</p>
+      </div>
+      <div class="station-grid">
+        <a class="station" href="#search"><strong>Bariloche</strong><span>BRC Airport</span></a>
+        <a class="station" href="#search"><strong>San Martín</strong><span>Chapelco CPC</span></a>
+        <a class="station" href="#search"><strong>Esquel</strong><span>EQS Airport</span></a>
+        <a class="station" href="#search"><strong>El Calafate</strong><span>FTE Airport</span></a>
+        <a class="station" href="#search"><strong>Ushuaia</strong><span>USH Airport</span></a>
+        <a class="station" href="#search"><strong>Mendoza</strong><span>MDZ Airport</span></a>
+      </div>
+    </section>
+
+    <section class="promo-band">
+      <div>
+        <h2>Premium insurance · 6 interest-free installments</h2>
+        <p>Travel with friends in a 9-seater van — ask for current promotions on WhatsApp.</p>
+      </div>
+      <a class="btn btn-solid btn-lg" href="https://wa.me/5492944158889" target="_blank" rel="noopener">Ask on WhatsApp</a>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="contact-grid">
+        <div>
+          <h2>Talk to Ready</h2>
+          <p>Reservations, ops, and admin — WhatsApp-first, human answers.</p>
+          <ul class="contact-list">
+            <li><span>Reservas</span> <a href="https://wa.me/5492944158889">+54 9 294 415-8889</a></li>
+            <li><span>Operativo</span> <a href="https://wa.me/5492944616181">+54 9 294 461-6181</a></li>
+            <li><span>Email</span> <a href="mailto:reservas@readyrentacar.com.ar">reservas@readyrentacar.com.ar</a></li>
+            <li><span>Hours</span> Mon–Fri 09–19 · Sat 09–13</li>
+          </ul>
+        </div>
+        <div class="refine-panel">
+          <h3>Before you search</h3>
+          <label class="check"><input type="checkbox" checked /> I am 21 or older</label>
+          <label class="check"><input type="checkbox" /> Need child seat</label>
+          <label class="check"><input type="checkbox" /> Winter / chains interest</label>
+          <p class="hint">Exact driver age only asked if under 25 or for special categories.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-brand">
+      <img src="../assets/logo.png" alt="" width="44" height="44" />
+      <div>
+        <strong>Ready Rent-a-Car</strong>
+        <span>Patagonia · Argentina</span>
+      </div>
+    </div>
+    <div class="footer-links">
+      <a href="../">All mocks</a>
+      <a href="../b-precision/">Direction B</a>
+      <a href="https://www.readyrentacar.com.ar/en">Live site</a>
+    </div>
+    <p class="fine">Prototype A · Editorial · Demo search only · Photos Unsplash placeholders</p>
+  </footer>
+
+  <a class="wa-fab" href="https://wa.me/5492944158889" target="_blank" rel="noopener" aria-label="WhatsApp">
+    <span>WhatsApp</span>
+  </a>
+
+  <div class="toast" id="toast" hidden role="status">Search demo — connect inventory next.</div>
+
+  <script src="app.js"></script>
+</body>
+</html>

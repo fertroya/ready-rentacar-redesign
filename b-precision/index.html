@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ready Rent-a-Car · Booking Precision</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./">
+      <img src="../assets/logo-alt.png" alt="Ready Rent-a-Car" />
+    </a>
+    <nav>
+      <a href="#results">Cars</a>
+      <a href="#destinations">Destinations</a>
+      <a href="#faq">FAQ</a>
+      <a href="#help">Help</a>
+    </nav>
+    <div class="top-actions">
+      <select class="lang" aria-label="Language">
+        <option>EN</option>
+        <option>ES</option>
+        <option>PT</option>
+      </select>
+      <a class="link-wa" href="https://wa.me/5492944158889" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero-compact">
+      <div class="hero-copy">
+        <p class="kicker">Airport car rental · Patagonia</p>
+        <h1>Book in three clear steps</h1>
+        <p class="sub">Pick station → choose dates → see trip-fit cars with transparent next steps.</p>
+      </div>
+
+      <form class="funnel" id="funnel" aria-label="Booking search">
+        <div class="steps" aria-hidden="true">
+          <span class="step is-active" data-step-indicator="1">1 · Place</span>
+          <span class="step" data-step-indicator="2">2 · Dates</span>
+          <span class="step" data-step-indicator="3">3 · Refine</span>
+        </div>
+
+        <div class="panel is-active" data-panel="1">
+          <label for="station">Pick-up station</label>
+          <select id="station" required>
+            <option value="">Select airport / station</option>
+            <option value="brc" selected>Bariloche Airport (BRC)</option>
+            <option value="cpc">San Martín de los Andes · Chapelco (CPC)</option>
+            <option value="eqs">Esquel Airport (EQS)</option>
+            <option value="fte">El Calafate Airport (FTE)</option>
+            <option value="ush">Ushuaia Airport (USH)</option>
+            <option value="mdz">Mendoza Airport (MDZ)</option>
+          </select>
+          <label class="inline">
+            <input type="checkbox" id="oneway" />
+            Different drop-off (one-way)
+          </label>
+          <div id="drop-wrap" class="drop-wrap" hidden>
+            <label for="drop">Drop-off station</label>
+            <select id="drop">
+              <option value="fte">El Calafate Airport (FTE)</option>
+              <option value="ush">Ushuaia Airport (USH)</option>
+              <option value="brc">Bariloche Airport (BRC)</option>
+              <option value="cpc">Chapelco (CPC)</option>
+              <option value="eqs">Esquel (EQS)</option>
+              <option value="mdz">Mendoza (MDZ)</option>
+            </select>
+          </div>
+          <button type="button" class="primary" data-next="2">Continue</button>
+        </div>
+
+        <div class="panel" data-panel="2" hidden>
+          <div class="row-2">
+            <div>
+              <label for="from">Pick-up</label>
+              <input id="from" type="datetime-local" value="2026-07-20T10:00" required />
+            </div>
+            <div>
+              <label for="to">Drop-off</label>
+              <input id="to" type="datetime-local" value="2026-07-27T10:00" required />
+            </div>
+          </div>
+          <p class="assist">Tip: match your flight arrival + 45 minutes for baggage.</p>
+          <div class="nav-row">
+            <button type="button" class="ghost" data-prev="1">Back</button>
+            <button type="button" class="primary" data-next="3">Continue</button>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="3" hidden>
+          <fieldset>
+            <legend>Trip fit</legend>
+            <label class="pill"><input type="radio" name="fit" value="any" checked /> Any</label>
+            <label class="pill"><input type="radio" name="fit" value="suv" /> SUV</label>
+            <label class="pill"><input type="radio" name="fit" value="4x4" /> 4×4</label>
+            <label class="pill"><input type="radio" name="fit" value="family" /> Family / van</label>
+            <label class="pill"><input type="radio" name="fit" value="pickup" /> Pickup</label>
+          </fieldset>
+          <label class="inline"><input type="checkbox" checked /> Driver is 21+</label>
+          <label class="inline"><input type="checkbox" id="need-age" /> I need to enter exact age (under 25)</label>
+          <div id="age-wrap" hidden>
+            <label for="age">Driver age</label>
+            <input id="age" type="number" min="18" max="90" placeholder="e.g. 23" />
+          </div>
+          <div class="nav-row">
+            <button type="button" class="ghost" data-prev="2">Back</button>
+            <button type="submit" class="primary">Show available cars</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="signals">
+      <div><strong>No surprise desk fees</strong><span>Quote path shows inclusions before pay</span></div>
+      <div><strong>Cancel free 48h</strong><span>Change plans without panic</span></div>
+      <div><strong>WhatsApp backup</strong><span>Human help if the form stalls</span></div>
+      <div><strong>Mercado Pago ready</strong><span>Installments on selected promos</span></div>
+    </section>
+
+    <section class="results" id="results">
+      <div class="results-head">
+        <div>
+          <h2>Available for your trip</h2>
+          <p id="summary">Bariloche (BRC) · 7 days · Any category</p>
+        </div>
+        <div class="sort">
+          <label for="sort">Sort</label>
+          <select id="sort">
+            <option>Recommended</option>
+            <option>Price · low to high</option>
+            <option>Capacity</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="result-list" id="result-list">
+        <!-- filled by JS -->
+      </div>
+    </section>
+
+    <section class="destinations" id="destinations">
+      <h2>Destination hubs</h2>
+      <p class="lede">SEO-ready landing strips — each station becomes its own conversion page later.</p>
+      <div class="dest-grid">
+        <a href="#funnel" data-set-station="brc"><strong>Bariloche</strong><span>Lakes · Cerro Catedral</span></a>
+        <a href="#funnel" data-set-station="cpc"><strong>San Martín</strong><span>Chapelco · Seven Lakes</span></a>
+        <a href="#funnel" data-set-station="fte"><strong>El Calafate</strong><span>Perito Moreno</span></a>
+        <a href="#funnel" data-set-station="ush"><strong>Ushuaia</strong><span>Tierra del Fuego</span></a>
+        <a href="#funnel" data-set-station="eqs"><strong>Esquel</strong><span>Los Alerces</span></a>
+        <a href="#funnel" data-set-station="mdz"><strong>Mendoza</strong><span>Wine country gateway</span></a>
+      </div>
+    </section>
+
+    <section class="faq" id="faq">
+      <h2>Clear answers before you book</h2>
+      <details open>
+        <summary>What documents do I need at pickup?</summary>
+        <p>Valid driver’s license, passport or DNI, and the credit card used for the security deposit (policy confirmed on quote).</p>
+      </details>
+      <details>
+        <summary>Can I do a one-way between Patagonia airports?</summary>
+        <p>Yes — enable one-way in search. Fees depend on route (e.g. BRC → FTE). Shown before confirmation.</p>
+      </details>
+      <details>
+        <summary>Is mileage limited?</summary>
+        <p>Most leisure categories include generous / unlimited km for regional trips — confirmed per quote.</p>
+      </details>
+      <details>
+        <summary>Winter tires or chains?</summary>
+        <p>Seasonal request for BRC/CPC. Add in refine or ask WhatsApp when booking ski weeks.</p>
+      </details>
+    </section>
+
+    <section class="help" id="help">
+      <h2>Need a human?</h2>
+      <p>Reservas WhatsApp <a href="https://wa.me/5492944158889">+54 9 294 415-8889</a> · Operativo <a href="https://wa.me/5492944616181">+54 9 294 461-6181</a></p>
+      <p><a href="mailto:reservas@readyrentacar.com.ar">reservas@readyrentacar.com.ar</a> · Mon–Fri 09–19 · Sat 09–13</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <img src="../assets/logo.png" alt="" width="40" height="40" />
+    <div>
+      <strong>Ready Rent-a-Car</strong> · Direction B prototype
+      <div class="footer-links">
+        <a href="../">All mocks</a>
+        <a href="../a-patagonia/">Direction A</a>
+        <a href="https://www.readyrentacar.com.ar/en">Live site</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="sticky-book" id="sticky-book" hidden>
+    <div>
+      <strong id="sticky-title">Continue booking</strong>
+      <span id="sticky-meta">Complete search to see cars</span>
+    </div>
+    <button type="button" class="primary" id="sticky-cta">Show cars</button>
+  </div>
+
+  <dialog id="quote-dialog">
+    <form method="dialog" class="dialog-body">
+      <h3 id="dialog-title">Request quote</h3>
+      <p id="dialog-copy">Demo only — wire to inventory / WhatsApp next.</p>
+      <menu>
+        <button value="cancel" class="ghost">Close</button>
+        <a class="primary" href="https://wa.me/5492944158889" target="_blank" rel="noopener">Continue on WhatsApp</a>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
