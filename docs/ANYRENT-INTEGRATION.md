@@ -90,3 +90,48 @@ Open:
 `https://fertroya.github.io/ready-rentacar-redesign/merged/?engine=live`
 
 or locally `merged/index.html?engine=live` — Cotizar posts into the live Ready booking engine.
+
+## Plan B — no theme access in October admin
+
+Jedeye often hides **CMS → Themes**. If you only have Contenido / Configuración (SEO, admins, mail, languages), you cannot activate a new front-end theme from the UI.
+
+### What DNS alone cannot do
+
+NIC.ar / DNS maps **hostnames → IPs**. It cannot say:
+
+- `/` → GitHub Pages  
+- `/backend` → October  
+
+Path-based split needs a **reverse proxy** (Cloudflare, nginx, CDN worker), not an A/CNAME record.
+
+### Plan B options (best → fallback)
+
+| Option | How | Keeps AnyRent? | Notes |
+| --- | --- | --- | --- |
+| **B1 · FTP/cPanel theme upload** | Ask Towebs/Jedeye for filesystem access; drop `themes/ready-patagonia` and set active theme in DB/config | Yes, same origin | Best if they won’t give Themes UI |
+| **B2 · Cloudflare (or similar) path proxy** | Point `www` DNS to Cloudflare; Worker/Rules: `/backend*`, `/plugins*`, `/modules*`, `/booking*` → origin October; everything else → GH Pages / static host | Yes | Real “root new UI + backend old” |
+| **B3 · Subdomain split** | `www` or `app` = new UI (Pages); `admin.ready…` or keep `ready…/backend` on October; booking handoff to live `/booking` | Yes via handoff | Simplest DNS; two hosts |
+| **B4 · Apex → Pages only** | Point whole domain to GH Pages | **No** unless you also proxy booking | Breaks admin & live booking — avoid |
+
+### Cloudflare Worker sketch (B2)
+
+```text
+readyrentacar.com.ar  →  Cloudflare
+  /backend/*  /plugins/*  /modules/*  /booking/*  /storage/*
+       →  origin 185.12.116.101 (October + AnyRent)
+  everything else
+       →  GitHub Pages (or another static host with our UI)
+```
+
+Search on the new UI keeps using **live handoff** (`POST` to `/en` on the October origin) or same-origin `/en` if you also proxy the October front booking routes.
+
+### What to request from Jedeye / Towebs (in order)
+
+1. Permission **Manage themes** / show **CMS → Themes**, **or**
+2. SFTP/cPanel to `themes/` + how they set `cms.active_theme`, **or**
+3. Approval to put the domain behind Cloudflare for path routing (B2), **or**
+4. API credentials for a proper BFF (long-term, full in-UI quote)
+
+### NIC.ar
+
+Useful for changing nameservers / records (e.g. to Cloudflare). **Not** sufficient by itself for `/` vs `/backend` split.
