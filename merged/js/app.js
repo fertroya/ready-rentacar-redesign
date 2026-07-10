@@ -156,8 +156,12 @@
     el.innerHTML = `
       <a class="skip" href="#main">Skip</a>
       <a class="brand" href="${href("home")}">
-        <img src="${BASE}../assets/logo-alt.png" alt="Ready Rent-a-Car" width="140" height="70" />
-        <span class="brand-name">Ready</span>
+        <img class="brand-mark" src="${BASE}../assets/logo.png" alt="" width="44" height="44" />
+        <span class="brand-wordmark" aria-hidden="true">
+          <span class="brand-ready">Ready</span>
+          <span class="brand-rest">Rent a Car</span>
+        </span>
+        <span class="visually-hidden">Ready Rent-a-Car</span>
       </a>
       <nav class="nav-links" id="nav-links" aria-label="Primary">
         ${links
@@ -457,7 +461,7 @@
       if (el) el.textContent = val;
     };
     set("eyebrow", dict.home.eyebrow);
-    set("hero-title", dict.home.title);
+    // Hero brand is the Ready logo (image); keep alt in HTML — do not replace with plain text
     set("hero-lede", dict.home.lede);
     ["1", "2", "3", "4"].forEach((n) => {
       set(`strip${n}t`, dict.home[`strip${n}t`]);
