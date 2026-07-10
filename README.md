@@ -18,15 +18,16 @@ Navigable GitHub Pages prototypes for a Patagonia-first renewal of [readyrentaca
 | Routes | Lakes · Bariloche→Calafate · Winter · Ushuaia |
 | Why Ready | Personalization + roadside vs low-price desks |
 | Corporate | Newer SUV/pickup/SW4 pitch |
-| Quote | 3-step online quote (trip → car → details) |
+| Quote | 5-step quote (trip → vehicle → extras → details → pay) + live AnyRent handoff |
+| Extras / Promos | Accessories catalog + campaigns |
 | FAQ / Contact | Policy + WhatsApp / Mercado Pago / AnyRent / Orillas |
 
-## Owner brief reflected
+## Backend (Jedeye / AnyRent)
 
-- Foreign travelers · tailored routes (Bariloche ↔ Calafate)
-- Roadside assistance differentiator
-- Pick up in hubs, return anywhere in Argentina
-- Newer SUVs / pickups / SW4 for corporate
-- Mercado Pago Premium 6 cuotas · WhatsApp · Jedeye/AnyRent
+See **[docs/ANYRENT-INTEGRATION.md](./docs/ANYRENT-INTEGRATION.md)**.
 
-Logo retained from Ready. Demo ARS rates only — wire live inventory next.
+- Default prototype mode: **DEMO** (local indicative rates)
+- Footer toggle **Engine: LIVE** (or `?engine=live`) hands search off to the public booking engine on `readyrentacar.com.ar`
+- Admin credentials must **never** go in the frontend — use a server BFF + Jedeye API for full in-UI pricing later
+
+Logo retained from Ready.

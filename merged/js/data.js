@@ -10,12 +10,12 @@ window.READY_DATA = {
   engine: "https://www.anyrent.pt/",
   liveSite: "https://www.readyrentacar.com.ar/en",
   stations: [
-    { id: "brc", code: "BRC", city: "Bariloche", address: "Ruta Provincial 80 S/N", hours: "09:00–19:00" },
-    { id: "cpc", code: "CPC", city: "San Martín de los Andes", address: "Aeropuerto Chapelco", hours: "08:00–21:00" },
-    { id: "eqs", code: "EQS", city: "Esquel", address: "Aeropuerto Esquel", hours: "08:00–21:00" },
-    { id: "fte", code: "FTE", city: "El Calafate", address: "Tonko Simunovic 2251", hours: "08:00–21:00" },
-    { id: "ush", code: "USH", city: "Ushuaia", address: "Aeropuerto Ushuaia", hours: "08:00–20:00" },
-    { id: "mdz", code: "MDZ", city: "Mendoza", address: "Aeropuerto Mendoza", hours: "By arrangement" },
+    { id: "brc", code: "BRC", city: "Bariloche", address: "Ruta Provincial 80 S/N", hours: "09:00–19:00", liveSlug: "bariloche" },
+    { id: "cpc", code: "CPC", city: "San Martín de los Andes", address: "Aeropuerto Chapelco", hours: "08:00–21:00", liveSlug: "san-martin-de-los-andes" },
+    { id: "eqs", code: "EQS", city: "Esquel", address: "Aeropuerto Esquel", hours: "08:00–21:00", liveSlug: "esquel" },
+    { id: "fte", code: "FTE", city: "El Calafate", address: "Tonko Simunovic 2251", hours: "08:00–21:00", liveSlug: "el-calafate" },
+    { id: "ush", code: "USH", city: "Ushuaia", address: "Aeropuerto Ushuaia", hours: "08:00–20:00", liveSlug: "ushuaia" },
+    { id: "mdz", code: "MDZ", city: "Mendoza", address: "Aeropuerto Mendoza", hours: "By arrangement", liveSlug: "mendoza-aeropuerto" },
   ],
   // Demo one-way fee matrix (ARS thousands) — replace with live rates
   onewayFees: {
@@ -41,6 +41,7 @@ window.READY_DATA = {
       img: "assets/fleet/tracker.png",
       isNew: true,
       corporate: false,
+      liveGid: "1__suvat",
     },
     {
       id: "cross",
@@ -50,6 +51,7 @@ window.READY_DATA = {
       img: "assets/fleet/cross.png",
       isNew: true,
       corporate: false,
+      liveGid: "1__GFAM",
     },
     {
       id: "spin",
@@ -59,6 +61,7 @@ window.READY_DATA = {
       img: "assets/fleet/spin.png",
       isNew: false,
       corporate: false,
+      liveGid: "1__XXAR",
     },
     {
       id: "hiace",
@@ -68,6 +71,7 @@ window.READY_DATA = {
       img: "assets/fleet/hiace.png",
       isNew: false,
       corporate: true,
+      liveGid: "1__van",
     },
     {
       id: "hiluxm",
@@ -77,6 +81,7 @@ window.READY_DATA = {
       img: "assets/fleet/hiluxm.png",
       isNew: false,
       corporate: true,
+      liveGid: "1__PICKUPMT",
     },
     {
       id: "hilux",
@@ -86,6 +91,7 @@ window.READY_DATA = {
       img: "assets/fleet/hilux.png",
       isNew: true,
       corporate: true,
+      liveGid: "1__FQBD",
     },
     {
       id: "sw4",
@@ -95,6 +101,7 @@ window.READY_DATA = {
       img: "assets/fleet/sw4.png",
       isNew: true,
       corporate: true,
+      liveGid: "1__OFBD",
     },
   ],
   winterDaily: 18000,

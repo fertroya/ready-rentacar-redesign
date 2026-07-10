@@ -645,6 +645,14 @@ h3 { font-size: 1.25rem; margin: 0 0 8px; }
   border: 1px solid var(--line); background: var(--snow); border-radius: 999px;
   padding: 8px 12px; font-size: .8rem; font-weight: 600; color: var(--muted);
 }
+button.engine-toggle {
+  cursor: pointer;
+  font: inherit;
+}
+button.engine-toggle:hover {
+  color: var(--ink);
+  border-color: var(--lake);
+}
 
 @media (max-width: 1100px) {
   .search-bar,

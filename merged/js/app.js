@@ -212,6 +212,7 @@
             <span class="int-pill">Stripe</span>
             <span class="int-pill">WhatsApp</span>
             <span class="int-pill">EN · ES · PT</span>
+            <button type="button" class="int-pill engine-toggle" id="engine-toggle" title="Demo rates vs live AnyRent handoff"></button>
           </div>
         </div>
         <div>
@@ -246,6 +247,16 @@
       </div>
       <p class="fineprint">${dict.footer.legal}</p>
     `;
+    const engineBtn = el.querySelector("#engine-toggle");
+    if (engineBtn && window.READY_JEDEYE) {
+      const mode = window.READY_JEDEYE.engineMode();
+      engineBtn.textContent = mode === "live" ? "Engine: LIVE" : "Engine: DEMO";
+      engineBtn.addEventListener("click", () => {
+        const next = window.READY_JEDEYE.engineMode() === "live" ? "demo" : "live";
+        window.READY_JEDEYE.setEngineMode(next);
+        location.reload();
+      });
+    }
   }
 
   function bindSearchForm(form) {
@@ -343,6 +354,16 @@
       };
       payload.extras = seedExtrasFromFlags(payload);
       TRIP.save(payload);
+
+      const jedeye = window.READY_JEDEYE;
+      if (jedeye && jedeye.engineMode() === "live") {
+        try {
+          jedeye.handoffToLiveBooking(payload, { lang: getLang() === "pt" ? "pt" : getLang() === "es" ? "es" : "en" });
+          return;
+        } catch (err) {
+          console.warn("Live handoff failed, falling back to demo quote", err);
+        }
+      }
       location.href = href("quote");
     });
 
@@ -989,7 +1010,21 @@
         ${extrasHtml}
         <p style="margin:12px 0 0;font-size:.82rem;color:var(--muted)">${q.demoNote}</p>
         <p style="margin:6px 0 0;font-size:.82rem;color:var(--muted)">${q.mpNote}</p>
+        <p style="margin:14px 0 0">
+          <button type="button" class="btn btn-solid btn-sm" id="live-handoff-btn">${q.liveHandoff || "Continue on live AnyRent"}</button>
+        </p>
       `;
+      document.getElementById("live-handoff-btn")?.addEventListener("click", () => {
+        if (!window.READY_JEDEYE) return;
+        try {
+          window.READY_JEDEYE.handoffToLiveBooking(cur, {
+            lang: getLang() === "pt" ? "pt" : getLang() === "es" ? "es" : "en",
+          });
+        } catch (err) {
+          console.warn(err);
+          location.href = window.READY_JEDEYE.liveBookingHintUrl(cur);
+        }
+      });
       window.__readyQuoteTotal = {
         cur,
         car,

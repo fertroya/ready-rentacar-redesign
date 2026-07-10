@@ -224,8 +224,9 @@ window.READY_I18N = {
       linePremium: "Premium insurance (optional)",
       lineExtras: "Extras & accessories",
       lineTotal: "Indicative total",
-      demoNote: "Indicative ARS demo figures — replace with live Jedeye/AnyRent rates.",
+      demoNote: "Indicative ARS demo figures — replace with live Jedeye/AnyRent rates. Toggle Engine: LIVE in the footer to hand off search to the live booking engine.",
       mpNote: "Mercado Pago: Premium promo may unlock 6 interest-free installments. Stripe for international cards.",
+      liveHandoff: "Continue on live AnyRent",
     },
     faqsPage: {
       title: "FAQ",
@@ -483,8 +484,9 @@ window.READY_I18N = {
       linePremium: "Seguro Premium (opcional)",
       lineExtras: "Accesorios y extras",
       lineTotal: "Total indicativo",
-      demoNote: "Cifras ARS demo — reemplazar por tarifas live Jedeye/AnyRent.",
+      demoNote: "Cifras ARS demo — en el footer, Engine: LIVE entrega la búsqueda al motor AnyRent en vivo.",
       mpNote: "Mercado Pago: la promo Premium puede habilitar 6 cuotas sin interés. Stripe para tarjetas internacionales.",
+      liveHandoff: "Continuar en AnyRent live",
     },
     faqsPage: {
       title: "Preguntas frecuentes",
@@ -742,8 +744,9 @@ window.READY_I18N = {
       linePremium: "Seguro Premium (opcional)",
       lineExtras: "Extras e acessórios",
       lineTotal: "Total indicativo",
-      demoNote: "Valores ARS demo — substituir por tarifas live Jedeye/AnyRent.",
+      demoNote: "Valores ARS demo — no rodapé, Engine: LIVE envia a busca ao motor AnyRent ao vivo.",
       mpNote: "Mercado Pago: a promo Premium pode liberar 6 parcelas sem juros. Stripe para cartões internacionais.",
+      liveHandoff: "Continuar no AnyRent live",
     },
     faqsPage: {
       title: "Perguntas frequentes",
