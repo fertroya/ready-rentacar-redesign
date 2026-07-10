@@ -21,6 +21,7 @@
   );
 
   const CAR_TO_GID = {
+    // October plugin gids (booking UI)
     tracker: "1__suvat",
     cross: "1__GFAM",
     spin: "1__XXAR",
@@ -28,6 +29,24 @@
     hiluxm: "1__PICKUPMT",
     hilux: "1__FQBD",
     sw4: "1__OFBD",
+  };
+
+  /** Cloud API group_code values (readyrac.api.anyrent.pt) */
+  const CAR_TO_API_GROUP = {
+    tracker: "suvat",
+    cross: "GFAM",
+    spin: "XXAR",
+    hiace: "van",
+    hiluxm: "PICKUPMT",
+    hilux: "FQBD",
+    sw4: "OFBD",
+  };
+
+  const EXTRA_TO_API = {
+    chains: "cadenas-de-nieve",
+    infant: "silla-bebe",
+    child: "silla-nino",
+    afterhours: "fuera-de-horario",
   };
 
   function engineMode() {
@@ -136,6 +155,8 @@
     STATION_TO_LIVE,
     LIVE_TO_STATION,
     CAR_TO_GID,
+    CAR_TO_API_GROUP,
+    EXTRA_TO_API,
     engineMode,
     setEngineMode,
     toLiveDateParts,

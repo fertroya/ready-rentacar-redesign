@@ -106,10 +106,12 @@ window.READY_DATA = {
   ],
   winterDaily: 18000,
   premiumDaily: 25000,
-  // Demo accessory rates (ARS) — wire to Jedeye extras catalog in production
+  // Live AnyRent cloud API codes (see docs/ANYRENT-INTEGRATION.md Path L)
+  // Prices still demo until BFF has rates:read
   extras: [
     {
       id: "chains",
+      liveCode: "cadenas-de-nieve",
       icon: "⛓",
       pricing: "daily",
       amount: 12000,
@@ -119,22 +121,25 @@ window.READY_DATA = {
     },
     {
       id: "infant",
+      liveCode: "silla-bebe",
       icon: "👶",
       pricing: "daily",
       amount: 8000,
-      maxQty: 3,
+      maxQty: 2,
       common: true,
     },
     {
       id: "child",
+      liveCode: "silla-nino",
       icon: "🧒",
       pricing: "daily",
       amount: 8000,
-      maxQty: 3,
+      maxQty: 2,
       common: true,
     },
     {
       id: "booster",
+      liveCode: null,
       icon: "💺",
       pricing: "daily",
       amount: 6000,
@@ -143,6 +148,7 @@ window.READY_DATA = {
     },
     {
       id: "driver",
+      liveCode: null,
       icon: "🪪",
       pricing: "daily",
       amount: 15000,
@@ -151,6 +157,7 @@ window.READY_DATA = {
     },
     {
       id: "gps",
+      liveCode: null,
       icon: "📍",
       pricing: "daily",
       amount: 9000,
@@ -159,6 +166,7 @@ window.READY_DATA = {
     },
     {
       id: "ski",
+      liveCode: null,
       icon: "🎿",
       pricing: "daily",
       amount: 10000,
@@ -166,7 +174,26 @@ window.READY_DATA = {
       seasonal: true,
       common: false,
     },
+    {
+      id: "afterhours",
+      liveCode: "fuera-de-horario",
+      icon: "🌙",
+      pricing: "once",
+      amount: 25000,
+      maxQty: 1,
+      common: false,
+    },
   ],
+  insurances: [
+    { id: "cdw", liveCode: "CDW", required: true },
+    { id: "premium", liveCode: "PCDW", required: false },
+    { id: "total", liveCode: "SEGURO TOTAL", required: false },
+  ],
+  api: {
+    baseUrl: "https://readyrac.api.anyrent.pt/v1",
+    // Key must live only in a server BFF — never in this file or the browser
+    authHeader: "X-Api-Key",
+  },
   promotions: [
     { id: "premium6", href: "https://www.readyrentacar.com.ar/en/campanhas/oferta-pago-total-anticipado" },
     { id: "van9", href: "https://www.readyrentacar.com.ar/en/campanhas/suv-nuevos-modelos-en-la-categoria" },

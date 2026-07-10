@@ -130,8 +130,114 @@ Search on the new UI keeps using **live handoff** (`POST` to `/en` on the Octobe
 1. Permission **Manage themes** / show **CMS → Themes**, **or**
 2. SFTP/cPanel to `themes/` + how they set `cms.active_theme`, **or**
 3. Approval to put the domain behind Cloudflare for path routing (B2), **or**
-4. API credentials for a proper BFF (long-term, full in-UI quote)
+4. **API credentials + scopes** for Path L (long path / BFF) below
 
 ### NIC.ar
 
 Useful for changing nameservers / records (e.g. to Cloudflare). **Not** sufficient by itself for `/` vs `/backend` split.
+
+---
+
+## Path L — long path: Cloud API + BFF (full custom UI)
+
+Ready already has a **Jedeye cloud API tenant** separate from the October host:
+
+| Piece | Where |
+| --- | --- |
+| Marketing + booking UI + staff admin | `readyrentacar.com.ar` (October self-hosted, PT hosting) |
+| JSON API | `https://readyrac.api.anyrent.pt/v1` (AnyRent cloud, `x-api-cloud-node`) |
+
+Auth: header **`X-Api-Key: <token>`** (Bearer does **not** work).
+
+**Never put the API key in the browser or GitHub Pages.** Use a small BFF (Cloudflare Worker / Node on Ready’s host / serverless) that holds the key and exposes only safe public endpoints.
+
+### Endpoints confirmed (read)
+
+| Method | Path | Status with current key | Use for redesign |
+| --- | --- | --- | --- |
+| `GET` | `/stations` | ✅ 8 stations | Populate search selects (includes `el-chalten`) |
+| `GET` | `/fleets` | ✅ 1 fleet, 6 groups | Category cards / SIPP codes |
+| `GET` | `/vehicles` | ✅ 46 units | Inventory counts by `group_code` |
+| `GET` | `/optionals` | ✅ extras + taxes + insurances | Chains, child seats, one-way taxes, CDW/PCDW |
+| `GET` | `/availability` | ⚠️ exists, rate-limited (`too_many_requests` ~10 min) | Live availability by trip |
+| `GET` | `/rates/search` | ❌ needs scope **`rates:read`** | **Live prices** (blocking for full quote UI) |
+| `GET` | `/bookings` | ✅ (ops data; 1000+ rows) | Admin/ops only — not for public UI |
+| `GET` | `/customers` | ✅ | Admin/ops only — PII |
+| `POST` | `/bookings` | ✅ endpoint accepts JSON | Create reservation after quote (need correct body + likely write scope) |
+
+### Live catalog mapped to our mock
+
+**Stations** (`code`): `bariloche`, `el-calafate`, `san-martin-de-los-andes`, `esquel`, `ushuaia`, `mendoza-aeropuerto`, `bariloche-aeropuerto`, `el-chalten`
+
+**Fleet groups** (`code` → product):
+
+| API `group_code` | Name / model | Our mock id |
+| --- | --- | --- |
+| `suvat` | C SUV AT · Tracker | `tracker` |
+| `GFAM` | D SUV PREMIUN · Corolla Cross | `cross` |
+| `XXAR` | E MINIVAN · Spin 7 | `spin` |
+| `van` | G VAN · Hiace 9 | `hiace` |
+| `FQBD` | I Doble Cabina AT 4x4 · Hilux | `hilux` |
+| `OFBD` | F LUJO · SW4 | `sw4` |
+| `PICKUPMT` | (present on vehicles, not in `/fleets` groups list) | `hiluxm` |
+
+**Extras** (exactly the accessories we surfaced in the mock):
+
+| API code | Name | Notes |
+| --- | --- | --- |
+| `silla-nino` | SILLA NIÑO | qty up to 2, charged per day |
+| `silla-bebe` | SILLA BEBE | qty up to 2, charged per day |
+| `cadenas-de-nieve` | CADENAS DE NIEVE | qty 1, not per-day flag |
+| `fuera-de-horario` | FUERA DE HORARIO | after-hours fee |
+
+**One-way / fees** appear under `optionals.taxes` (e.g. `bariloche-calafate`, `bariloche-ushuaia`, …) plus required `tasa-aeroportuaria`.
+
+**Insurances:** `CDW` (required), `PCDW` (Premium / lower excess), `SEGURO TOTAL` (zero excess).
+
+### What the current API key can do today
+
+Enough to power a **catalog-backed redesign** without demo hardcoding:
+
+1. Load stations + fleet groups + extras/insurances from API via BFF  
+2. Keep quote UX in our UI  
+3. Still hand off to October `/booking` **or** wait for `rates:read` to show live totals  
+
+Not enough yet for a closed-loop custom checkout:
+
+- Missing **`rates:read`** → no authoritative price search  
+- `/availability` is sensitive to rate limits (cache aggressively in BFF)  
+- Booking create body/schema not fully documented here — ask Jedeye for PDF/OpenAPI  
+- Payments (Mercado Pago / Stripe) likely still on October or a separate payment flow
+
+### Ask Jedeye for Path L
+
+1. Grant scopes: **`rates:read`**, availability (if scoped), **`bookings:write`** (if we create from BFF)  
+2. Official docs / Postman for `GET /rates/search` and `POST /bookings` request bodies  
+3. Confirm whether payments stay on October or API returns a payment URL  
+4. Rotate the key that was shared in chat; store only in BFF secrets  
+5. Confirm rate limits for `/availability` and recommended cache TTL  
+
+### Target architecture
+
+```text
+Browser (our UI on theme / Pages / Cloudflare)
+        │  no API key
+        ▼
+BFF (Worker / Node)  ──X-Api-Key──►  readyrac.api.anyrent.pt/v1
+        │                              stations, fleets, optionals,
+        │                              rates/search, availability,
+        │                              POST bookings
+        ▼
+Optional: still use October /backend for staff ops
+```
+
+### Suggested build order (long path)
+
+1. **BFF skeleton** — proxy `GET /stations`, `/fleets`, `/optionals` (works with current key)  
+2. Replace mock `data.js` catalogs with BFF responses  
+3. Unlock **`rates:read`** → wire quote step 2 to live prices  
+4. Wire extras/insurance selection to API codes (`silla-nino`, `cadenas-de-nieve`, `PCDW`, …)  
+5. `POST /bookings` + payment handoff  
+6. Deprecate demo rates and October search handoff for the public funnel  
+
+Until steps 3–5 land, keep **Path A handoff** as production-safe fallback.
