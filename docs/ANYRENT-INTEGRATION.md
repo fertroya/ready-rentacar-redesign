@@ -159,11 +159,86 @@ Auth: header **`X-Api-Key: <token>`** (Bearer does **not** work).
 | `GET` | `/fleets` | ✅ 1 fleet, 6 groups | Category cards / SIPP codes |
 | `GET` | `/vehicles` | ✅ 46 units | Inventory counts by `group_code` |
 | `GET` | `/optionals` | ✅ extras + taxes + insurances | Chains, child seats, one-way taxes, CDW/PCDW |
-| `GET` | `/availability` | ⚠️ exists, rate-limited (`too_many_requests` ~10 min) | Live availability by trip |
-| `GET` | `/rates/search` | ❌ needs scope **`rates:read`** | **Live prices** (blocking for full quote UI) |
+| `GET` | **`/prices`** | ✅ **live quote** (this is the one from “Testear webservices”) | Step 2 of our funnel |
+| `GET` | `/availability` | ⚠️ exists, rate-limited | Optional; `/prices` already returns `status: AVAILABLE` |
+| `GET` | `/rates/search` | ❌ needs scope **`rates:read`** | Alternate/older path — prefer `/prices` |
 | `GET` | `/bookings` | ✅ (ops data; 1000+ rows) | Admin/ops only — not for public UI |
 | `GET` | `/customers` | ✅ | Admin/ops only — PII |
 | `POST` | `/bookings` | ✅ endpoint accepts JSON | Create reservation after quote (need correct body + likely write scope) |
+
+### `GET /prices` — request shape (from AnyRent tester)
+
+```http
+GET /v1/prices
+  ?api_key=***          # or header X-Api-Key (prefer header in BFF)
+  &lang=es
+  &pickup_station=bariloche
+  &dropoff_station=bariloche
+  &pickup_date=20260801T100000Z   # format: Ymd\THis\Z  (NOT ISO with dashes)
+  &dropoff_date=20260808T100000Z
+  &rate=                          # optional rate group code; empty = default WEBSITE
+  &voucher_code=
+```
+
+Auth works with **query `api_key`** (as in the tester) or **`X-Api-Key` header** (better for BFF — avoids keys in access logs).
+
+Successful response (simplified):
+
+```json
+{
+  "fleets": [{
+    "code": "vehiculos",
+    "groups": [{
+      "code": "suvat",
+      "name": "C SUV AT",
+      "brand": "CHEVROLET",
+      "model": "TRACKER",
+      "status": "AVAILABLE",
+      "rate": {
+        "code": "WEBSITE",
+        "rate_charge_type": "daily",
+        "time_units": 7,
+        "total_after_tax": 700000,
+        "currency": "ARS",
+        "tax_rate": 21,
+        "excess_value": 1900000,
+        "security_deposit_value": 600000,
+        "insurances": [ /* CDW required, etc. */ ]
+      },
+      "optionals_rates": {
+        "extras": { "1": { "code": "silla-nino", "price_after_tax": 9000, ... } },
+        "taxes": { /* one-way fees when applicable */ },
+        "insurances": { /* PCDW, SEGURO TOTAL upgrades */ }
+      }
+    }]
+  }]
+}
+```
+
+Example live totals (BRC→BRC, 7 days from 2026-08-01, ARS after tax):  
+`suvat` 700k · `GFAM` 910k · `XXAR` 1.05M · `FQBD` 1.75M · `van` 1.96M  
+
+Error `40` / “no groups/rates available” = criteria with no allotment/rate (dates too soon, station closed, or no rate calendar for that window) — not a bad endpoint.
+
+### Where prices are configured in AnyRent UI (not on the car card)
+
+You won’t see a “price” field on each vehicle plate. AnyRent prices **rate plans × fleet groups**, then `/prices` calculates for a trip.
+
+Look under the top menu **ANYRENT** (not Contenido / Configuración), typically something like:
+
+| Area (names vary ES/PT) | What it holds |
+| --- | --- |
+| **Tarifas / Rates / Rate groups** | Rate code e.g. `WEBSITE` — daily/weekly tables **per group** (`suvat`, `GFAM`, …) |
+| **Temporadas / Seasons** | Date ranges that switch which rate row applies |
+| **Grupos de flota / Fleet groups** | Category definition (Tracker, Cross…) — not the $ amount |
+| **Vehículos** | Individual units / plates assigned to a group |
+| **Extras / Optionals / Seguros** | `silla-nino`, `cadenas-de-nieve`, CDW/PCDW prices |
+| **Taxes / One-way** | `bariloche-calafate`, airport fee, etc. |
+
+So: **vehicle → belongs to group → group priced inside a rate (`WEBSITE`)**.  
+If `/prices` returns empty for some dates, check that the `WEBSITE` rate has seasons/allotments covering those dates for Bariloche (and that the group is bookable online).
+
+In “Testear webservices”, leave `rate=` empty unless you know another rate code; the API returned `rate.code: "WEBSITE"` when empty.
 
 ### Live catalog mapped to our mock
 
@@ -196,26 +271,27 @@ Auth: header **`X-Api-Key: <token>`** (Bearer does **not** work).
 
 ### What the current API key can do today
 
-Enough to power a **catalog-backed redesign** without demo hardcoding:
+Enough to power a **full live quote UI** via BFF (no demo hardcoding for catalog or prices):
 
-1. Load stations + fleet groups + extras/insurances from API via BFF  
-2. Keep quote UX in our UI  
-3. Still hand off to October `/booking` **or** wait for `rates:read` to show live totals  
+1. `GET /stations`, `/fleets`, `/optionals` → search + extras + insurance catalogs  
+2. `GET /prices` → live group prices, deposits, excess, optional line prices  
+3. Map `group.code` → our cards (`suvat`→Tracker, etc.)  
+4. Still hand off to October `/booking` for payment **or** continue to `POST /bookings` once body/docs are confirmed  
 
-Not enough yet for a closed-loop custom checkout:
+Remaining gaps:
 
-- Missing **`rates:read`** → no authoritative price search  
-- `/availability` is sensitive to rate limits (cache aggressively in BFF)  
-- Booking create body/schema not fully documented here — ask Jedeye for PDF/OpenAPI  
-- Payments (Mercado Pago / Stripe) likely still on October or a separate payment flow
+- Official `POST /bookings` body + payment URL / Mercado Pago flow  
+- `/availability` rate limits (optional if `/prices` status is enough)  
+- Prefer `X-Api-Key` header in BFF; avoid `api_key` in query strings (logs)  
+- Rotate any key pasted in chat / tester URLs  
 
 ### Ask Jedeye for Path L
 
-1. Grant scopes: **`rates:read`**, availability (if scoped), **`bookings:write`** (if we create from BFF)  
-2. Official docs / Postman for `GET /rates/search` and `POST /bookings` request bodies  
-3. Confirm whether payments stay on October or API returns a payment URL  
-4. Rotate the key that was shared in chat; store only in BFF secrets  
-5. Confirm rate limits for `/availability` and recommended cache TTL  
+1. Confirm `POST /bookings` schema + how payment (MP/Stripe) is returned  
+2. Docs for rate codes beyond `WEBSITE` (partners, corporate)  
+3. Rotate API key; store only in BFF secrets  
+4. Optional: allotment/season tips when `/prices` returns error `40`  
+5. Theme/FTP access if we also want October front restyle (Plan B1)  
 
 ### Target architecture
 
