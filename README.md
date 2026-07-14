@@ -28,6 +28,20 @@ See **[docs/ANYRENT-INTEGRATION.md](./docs/ANYRENT-INTEGRATION.md)**.
 
 - Default prototype mode: **DEMO** (local indicative rates)
 - Footer toggle **Engine: LIVE** (or `?engine=live`) hands search off to the public booking engine on `readyrentacar.com.ar`
-- Admin credentials must **never** go in the frontend — use a server BFF + Jedeye API for full in-UI pricing later
+- Admin credentials must **never** go in the frontend
+
+## BFF (read-only quote)
+
+Cloudflare Worker under **[`bff/`](./bff/)** proxies `stations` / `fleets` / `optionals` / `prices`.
+
+Live: https://ready-rentacar-bff.ready-rentacar-ft.workers.dev  
+
+Mock default engine = **BFF** (live prices, no bookings/payments). Footer toggles BFF ↔ DEMO. Docs: **[docs/BFF.md](./docs/BFF.md)**.
+
+```bash
+cd bff && npm install && cp .dev.vars.example .dev.vars
+# set ANYRENT_API_KEY, then:
+npm run dev
+```
 
 Logo retained from Ready.

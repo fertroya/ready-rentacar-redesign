@@ -113,8 +113,8 @@ window.READY_DATA = {
       id: "chains",
       liveCode: "cadenas-de-nieve",
       icon: "⛓",
-      pricing: "daily",
-      amount: 12000,
+      pricing: "once",
+      amount: 40000,
       maxQty: 1,
       seasonal: true,
       common: true,
@@ -193,6 +193,10 @@ window.READY_DATA = {
     baseUrl: "https://readyrac.api.anyrent.pt/v1",
     // Key must live only in a server BFF — never in this file or the browser
     authHeader: "X-Api-Key",
+  },
+  // Public BFF (Cloudflare Worker). Read-only: stations / fleets / optionals / prices.
+  bff: {
+    baseUrl: "https://ready-rentacar-bff.ready-rentacar-ft.workers.dev",
   },
   promotions: [
     { id: "premium6", href: "https://www.readyrentacar.com.ar/en/campanhas/oferta-pago-total-anticipado" },

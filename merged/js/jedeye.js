@@ -51,20 +51,33 @@
 
   function engineMode() {
     const q = new URL(location.href).searchParams.get("engine");
-    if (q === "live" || q === "demo") return q;
+    if (q === "live" || q === "demo" || q === "bff") return q;
     try {
-      return localStorage.getItem("ready_engine") || "demo";
+      return localStorage.getItem("ready_engine") || "bff";
     } catch {
-      return "demo";
+      return "bff";
     }
   }
 
   function setEngineMode(mode) {
+    const next = mode === "live" || mode === "demo" || mode === "bff" ? mode : "bff";
     try {
-      localStorage.setItem("ready_engine", mode);
+      localStorage.setItem("ready_engine", next);
     } catch {
       /* ignore */
     }
+  }
+
+  /** Cycle only demo ↔ bff (read-only). October handoff stays opt-in via ?engine=live. */
+  function cycleEngineMode() {
+    const cur = engineMode();
+    if (cur === "live") {
+      setEngineMode("bff");
+      return "bff";
+    }
+    const next = cur === "bff" ? "demo" : "bff";
+    setEngineMode(next);
+    return next;
   }
 
   /** AnyRent expects M/D/YYYY + g:i A */
@@ -159,6 +172,7 @@
     EXTRA_TO_API,
     engineMode,
     setEngineMode,
+    cycleEngineMode,
     toLiveDateParts,
     tripToLivePayload,
     handoffToLiveBooking,

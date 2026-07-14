@@ -254,10 +254,16 @@
     const engineBtn = el.querySelector("#engine-toggle");
     if (engineBtn && window.READY_JEDEYE) {
       const mode = window.READY_JEDEYE.engineMode();
-      engineBtn.textContent = mode === "live" ? "Engine: LIVE" : "Engine: DEMO";
+      engineBtn.textContent =
+        mode === "bff" ? "Engine: BFF" : mode === "live" ? "Engine: LIVE" : "Engine: DEMO";
+      engineBtn.title =
+        mode === "bff"
+          ? "Live prices via BFF (read-only)"
+          : mode === "live"
+            ? "October handoff enabled (?engine=live)"
+            : "Local demo rates";
       engineBtn.addEventListener("click", () => {
-        const next = window.READY_JEDEYE.engineMode() === "live" ? "demo" : "live";
-        window.READY_JEDEYE.setEngineMode(next);
+        window.READY_JEDEYE.cycleEngineMode();
         location.reload();
       });
     }
@@ -365,7 +371,7 @@
           jedeye.handoffToLiveBooking(payload, { lang: getLang() === "pt" ? "pt" : getLang() === "es" ? "es" : "en" });
           return;
         } catch (err) {
-          console.warn("Live handoff failed, falling back to demo quote", err);
+          console.warn("Live handoff failed, falling back to quote", err);
         }
       }
       location.href = href("quote");
@@ -765,8 +771,21 @@
     }
 
     let step = 1;
+    /** @type {null | { groups: any[], query: any, fetchedAt: number, tripKey: string }} */
+    let bffQuote = null;
+    let bffError = "";
+    let bffLoading = false;
+
     const panels = [...document.querySelectorAll("[data-qpanel]")];
     const pills = [...document.querySelectorAll("[data-qstep]")];
+
+    function useBff() {
+      return window.READY_JEDEYE?.engineMode() === "bff" && window.READY_BFF;
+    }
+
+    function tripKey(t) {
+      return [t.pickup, t.dropoff, t.from, t.until, t.oneway ? "1" : "0"].join("|");
+    }
 
     function show(n) {
       step = n;
@@ -791,8 +810,8 @@
 
     pickup.innerHTML = stationOptions(trip.pickup || "brc");
     dropoff.innerHTML = stationOptions(trip.dropoff || "fte", true);
-    from.value = trip.from || "2026-07-20T10:00";
-    until.value = trip.until || "2026-07-27T10:00";
+    from.value = trip.from || "2026-08-01T10:00";
+    until.value = trip.until || "2026-08-08T10:00";
     oneway.checked = Boolean(trip.oneway) || trip.pickup !== trip.dropoff;
     winter.checked = Boolean(trip.winter) || isWinterSeason(from.value);
     if (wantChild) {
@@ -820,18 +839,66 @@
       }
     });
 
+    const payCta = form.querySelector('[type="submit"]');
+    if (payCta) payCta.textContent = q.payCtaSafe || q.payCta;
+
     oneway.addEventListener("change", () => {
       dropWrap.hidden = !oneway.checked;
       renderSummary();
     });
     form.addEventListener("change", renderSummary);
 
-    document.getElementById("to-step-2")?.addEventListener("click", () => {
+    async function loadBffQuote(force = false) {
+      if (!useBff()) {
+        bffQuote = null;
+        bffError = "";
+        return null;
+      }
+      const tnow = readTrip();
+      const key = tripKey(tnow);
+      if (!force && bffQuote && bffQuote.tripKey === key) return bffQuote;
+      bffLoading = true;
+      bffError = "";
+      renderCars();
+      renderSummary();
+      try {
+        const lang = getLang() === "pt" ? "pt" : getLang() === "es" ? "es" : "en";
+        const res = await window.READY_BFF.fetchPrices(tnow, lang);
+        bffQuote = { ...res, tripKey: key, fetchedAt: Date.now() };
+        bffError = res.groups?.length ? "" : q.bffEmpty || "No rates for these dates";
+      } catch (err) {
+        console.warn("BFF quote failed", err);
+        bffQuote = null;
+        bffError = err.message || "BFF error";
+      } finally {
+        bffLoading = false;
+      }
+      return bffQuote;
+    }
+
+    function liveForCar(carId) {
+      if (!bffQuote?.groups?.length) return null;
+      const g = window.READY_BFF.groupForCar(carId, bffQuote.groups);
+      return window.READY_BFF.pricingFromGroup(g);
+    }
+
+    document.getElementById("to-step-2")?.addEventListener("click", async () => {
       const payload = readTrip();
       if (payload.winter || payload.wantChild) {
         payload.extras = seedExtrasFromFlags({ ...TRIP.load(), ...payload });
       }
       TRIP.save(payload);
+      await loadBffQuote(true);
+      if (useBff() && bffQuote?.groups?.[0]) {
+        const sample = window.READY_BFF.pricingFromGroup(bffQuote.groups[0]);
+        DATA.extras.forEach((ex) => {
+          if (!ex.liveCode) return;
+          const p = window.READY_BFF.extraUnitPrice(sample.extras, ex.liveCode);
+          if (p != null) ex.amount = p;
+        });
+        const pcdw = window.READY_BFF.insuranceDaily(sample.insurances, "PCDW");
+        if (pcdw) DATA.premiumDaily = pcdw.daily;
+      }
       renderCars();
       show(2);
     });
@@ -899,15 +966,41 @@
       return normalizeExtras(map);
     }
 
+    function extrasCostLive(extrasMap, days, live) {
+      const map = normalizeExtras(extrasMap);
+      let total = 0;
+      const lines = [];
+      const exDict = dict.extras;
+      DATA.extras.forEach((ex) => {
+        const qty = map[ex.id] || 0;
+        if (!qty) return;
+        let unit = ex.amount;
+        if (live && ex.liveCode) {
+          const p = window.READY_BFF.extraUnitPrice(live.extras, ex.liveCode);
+          if (p != null) unit = p;
+        }
+        const amount = ex.pricing === "once" ? unit * qty : unit * qty * days;
+        total += amount;
+        lines.push({ id: ex.id, name: exDict[ex.id]?.name || ex.id, qty, amount });
+      });
+      return { total, lines };
+    }
+
     function renderExtras() {
       const list = document.getElementById("quote-extras");
       if (!list) return;
       const selected = normalizeExtras(TRIP.load().extras);
       const exDict = dict.extras;
+      const live = liveForCar(TRIP.load().carId);
       list.innerHTML = DATA.extras
         .map((ex) => {
           const copy = exDict[ex.id] || { name: ex.id, desc: "" };
           const qty = selected[ex.id] || 0;
+          let unit = ex.amount;
+          if (live && ex.liveCode) {
+            const p = window.READY_BFF.extraUnitPrice(live.extras, ex.liveCode);
+            if (p != null) unit = p;
+          }
           const opts = Array.from({ length: ex.maxQty + 1 }, (_, i) => {
             return `<option value="${i}" ${i === qty ? "selected" : ""}>${i}</option>`;
           }).join("");
@@ -916,7 +1009,7 @@
               <div class="extra-icon" aria-hidden="true">${ex.icon}</div>
               <div>
                 <h4>${copy.name}${ex.seasonal ? ` · ${exDict.seasonal}` : ""}</h4>
-                <p>${copy.desc} · ${money(ex.amount)}${exDict.perDay}</p>
+                <p>${copy.desc} · ${money(unit)}${ex.pricing === "once" ? "" : exDict.perDay}</p>
               </div>
               <div class="extra-qty">
                 <label for="extra-${ex.id}">${exDict.qty}</label>
@@ -949,26 +1042,47 @@
     function renderCars() {
       const list = document.getElementById("quote-cars");
       const selected = TRIP.load().carId;
-      list.innerHTML = DATA.cars
-        .map((c) => {
-          const label = carLabel(c.id);
-          const days = daysBetween(from.value, until.value);
-          const rental = c.daily * days;
-          return `
+      const days = daysBetween(from.value, until.value);
+      if (bffLoading) {
+        list.innerHTML = `<p style="color:var(--muted)">${q.bffLoading || "Loading live rates…"}</p>`;
+        return;
+      }
+      let prefix = "";
+      if (useBff() && bffError && !bffQuote?.groups?.length) {
+        prefix = `<p style="color:var(--ember)">${bffError}</p><p style="color:var(--muted)">${q.bffFallback || "Showing demo rates."}</p>`;
+      }
+      const cars = DATA.cars.filter((c) => {
+        if (!useBff() || !bffQuote?.groups?.length) return true;
+        return Boolean(liveForCar(c.id));
+      });
+      const source = cars.length ? cars : DATA.cars;
+      if (useBff() && bffQuote?.groups?.length) {
+        prefix += `<p style="margin:0 0 10px;font-size:.82rem;color:var(--muted)">${q.bffBadge || "Live AnyRent rates via BFF (read-only)"}</p>`;
+      }
+      list.innerHTML =
+        prefix +
+        source
+          .map((c) => {
+            const label = carLabel(c.id);
+            const live = liveForCar(c.id);
+            const rental = live ? live.totalAfterTax : c.daily * days;
+            const status = live?.status && live.status !== "AVAILABLE" ? ` · ${live.status}` : "";
+            const img = live?.imageUrl || carImg(c);
+            return `
             <label class="result-row" style="cursor:pointer">
-              <div class="thumb fleet-photo" style="background-image:url('${carImg(c)}')"></div>
+              <div class="thumb fleet-photo" style="background-image:url('${img}')"></div>
               <div>
                 <h3 style="margin:0">${label.name}${c.isNew ? ' <span class="badge-new">NEW</span>' : ""}</h3>
-                <p class="meta" style="margin:4px 0;color:var(--muted)">${label.similar}</p>
-                <p style="margin:0;font-size:.88rem;color:var(--muted)">${label.tags} · ${days}d</p>
+                <p class="meta" style="margin:4px 0;color:var(--muted)">${live ? `${live.brand || ""} ${live.model || ""}`.trim() || label.similar : label.similar}</p>
+                <p style="margin:0;font-size:.88rem;color:var(--muted)">${label.tags} · ${days}d${status}</p>
               </div>
               <div style="text-align:right">
                 <strong>${money(rental)}</strong>
                 <div><input type="radio" name="carId" value="${c.id}" ${selected === c.id ? "checked" : ""} /></div>
               </div>
             </label>`;
-        })
-        .join("");
+          })
+          .join("");
       list.querySelectorAll('input[name="carId"]').forEach((input) => {
         input.addEventListener("change", () => {
           TRIP.save({ carId: input.value });
@@ -983,11 +1097,31 @@
       if (step === 3) cur.extras = readExtrasFromUi();
       const car = DATA.cars.find((c) => c.id === cur.carId);
       const days = daysBetween(cur.from, cur.until);
-      const rental = car ? car.daily * days : 0;
-      const fee = cur.oneway ? onewayFee(cur.pickup, cur.dropoff) : 0;
-      const premiumCost = cur.premium ? DATA.premiumDaily * days : 0;
-      const { total: extrasTotal, lines: extrasLines } = extrasCost(cur.extras, days);
-      // Avoid double-counting: chains live in extras; winter checkbox only seeds chains
+      const live = car ? liveForCar(car.id) : null;
+      const usingLive = Boolean(useBff() && live);
+
+      let rental = car ? car.daily * days : 0;
+      let fee = cur.oneway ? onewayFee(cur.pickup, cur.dropoff) : 0;
+      let premiumCost = cur.premium ? DATA.premiumDaily * days : 0;
+      let { total: extrasTotal, lines: extrasLines } = extrasCost(cur.extras, days);
+      let deposit = null;
+      let excess = null;
+
+      if (usingLive) {
+        rental = live.totalAfterTax;
+        fee = 0;
+        const pcdw = window.READY_BFF.insuranceDaily(live.insurances, "PCDW");
+        if (cur.premium && pcdw) premiumCost = pcdw.daily * days;
+        else premiumCost = 0;
+        ({ total: extrasTotal, lines: extrasLines } = extrasCostLive(cur.extras, days, live));
+        excess = live.excess;
+        deposit = live.deposit;
+        if (cur.premium && pcdw) {
+          excess = pcdw.excess;
+          deposit = pcdw.deposit;
+        }
+      }
+
       const winterCost = 0;
       const total = rental + fee + winterCost + premiumCost + extrasTotal;
       const box = document.getElementById("quote-summary");
@@ -998,6 +1132,20 @@
             .map((l) => `<li><span>${l.name}${l.qty > 1 ? ` ×${l.qty}` : ""}</span><span>${money(l.amount)}</span></li>`)
             .join("")}</ul>`
         : "";
+      const sourceNote = usingLive
+        ? q.bffNote || "Live rates via BFF · no booking created · payment not connected yet"
+        : q.demoNote;
+      const depHtml =
+        usingLive && (deposit != null || excess != null)
+          ? `<div><dt>${q.lineDeposit || "Deposit"}</dt><dd>${money(deposit || 0)}</dd></div>
+             <div><dt>${q.lineExcess || "Excess"}</dt><dd>${money(excess || 0)}</dd></div>`
+          : "";
+      const handoff =
+        window.READY_JEDEYE?.engineMode() === "live"
+          ? `<p style="margin:14px 0 0">
+          <button type="button" class="btn btn-solid btn-sm" id="live-handoff-btn">${q.liveHandoff || "Continue on live AnyRent"}</button>
+        </p>`
+          : "";
       box.innerHTML = `
         <dl>
           <div><dt>${dict.search.pickup}</dt><dd>${st[cur.pickup] || cur.pickup}</dd></div>
@@ -1005,18 +1153,19 @@
           <div><dt>${dict.search.from}</dt><dd>${cur.from?.replace("T", " ") || "—"}</dd></div>
           <div><dt>${dict.search.until}</dt><dd>${cur.until?.replace("T", " ") || "—"}</dd></div>
           <div><dt>${q.lineRental}</dt><dd>${car ? money(rental) : "—"}</dd></div>
-          <div><dt>${q.lineOneway}</dt><dd>${money(fee)}</dd></div>
+          <div><dt>${q.lineOneway}</dt><dd>${usingLive ? q.includedInRate || "Included in rate" : money(fee)}</dd></div>
           <div><dt>${q.lineExtras}</dt><dd>${money(extrasTotal)}</dd></div>
           <div><dt>${q.linePremium}</dt><dd>${money(premiumCost)}</dd></div>
+          ${depHtml}
           <div><dt>${q.lineTotal}</dt><dd>${money(total)}</dd></div>
           <div><dt>${q.step5}</dt><dd>${payLabel}</dd></div>
         </dl>
         ${extrasHtml}
-        <p style="margin:12px 0 0;font-size:.82rem;color:var(--muted)">${q.demoNote}</p>
+        ${bffLoading ? `<p style="margin:12px 0 0;font-size:.82rem;color:var(--muted)">${q.bffLoading || "Loading…"}</p>` : ""}
+        ${bffError && useBff() && !usingLive ? `<p style="margin:8px 0 0;font-size:.82rem;color:var(--ember)">${bffError}</p>` : ""}
+        <p style="margin:12px 0 0;font-size:.82rem;color:var(--muted)">${sourceNote}</p>
         <p style="margin:6px 0 0;font-size:.82rem;color:var(--muted)">${q.mpNote}</p>
-        <p style="margin:14px 0 0">
-          <button type="button" class="btn btn-solid btn-sm" id="live-handoff-btn">${q.liveHandoff || "Continue on live AnyRent"}</button>
-        </p>
+        ${handoff}
       `;
       document.getElementById("live-handoff-btn")?.addEventListener("click", () => {
         if (!window.READY_JEDEYE) return;
@@ -1040,6 +1189,9 @@
         extrasTotal,
         extrasLines,
         total,
+        usingLive,
+        deposit,
+        excess,
       };
     }
 
@@ -1047,18 +1199,19 @@
       e.preventDefault();
       const pay = form.querySelector('input[name="pay"]:checked')?.value || "mercadopago";
       const stored = TRIP.load();
-      TRIP.save({ ...readTrip(), ...stored, pay, status: "checkout" });
+      TRIP.save({ ...readTrip(), ...stored, pay, status: "wa_quote" });
       const snap = window.__readyQuoteTotal;
       const label = snap?.car ? carLabel(snap.car.id).name : "";
       const extrasTxt = (snap?.extrasLines || []).map((l) => `${l.name}×${l.qty}`).join(", ");
+      const source = snap?.usingLive ? "BFF live rates" : "demo rates";
       const msg = encodeURIComponent(
-        `Ready quote\n${stored.name || ""}\n${stored.email || ""} · ${stored.phone || ""}\n${dict.stations[snap.cur.pickup]} → ${dict.stations[snap.cur.dropoff]}\n${snap.cur.from} → ${snap.cur.until}\n${label}\nExtras: ${extrasTxt || "—"}\nPay: ${pay}\nTotal: ${money(snap.total)}\n${stored.notes || ""}`
+        `Ready quote (${source})\n${stored.name || ""}\n${stored.email || ""} · ${stored.phone || ""}\n${dict.stations[snap.cur.pickup]} → ${dict.stations[snap.cur.dropoff]}\n${snap.cur.from} → ${snap.cur.until}\n${label}\nExtras: ${extrasTxt || "—"}\nPrefer pay: ${pay}\nTotal: ${money(snap.total)}\n${stored.notes || ""}\n(No online charge yet — prototype)`
       );
       document.getElementById("success").hidden = false;
-      document.getElementById("success-title").textContent = q.successTitle;
-      document.getElementById("success-body").textContent = q.successBody;
+      document.getElementById("success-title").textContent = q.successTitleSafe || q.successTitle;
+      document.getElementById("success-body").textContent = q.successBodySafe || q.successBody;
       document.getElementById("success-pay").textContent =
-        pay === "stripe" ? q.successPayStripe : q.successPayMp;
+        q.successPaySafe || (pay === "stripe" ? q.successPayStripe : q.successPayMp);
       const wa = document.getElementById("success-wa");
       wa.textContent = q.wa;
       wa.href = `https://wa.me/${DATA.whatsapp}?text=${msg}`;

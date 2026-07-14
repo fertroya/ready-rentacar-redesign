@@ -1,0 +1,4 @@
+# Copy to .dev.vars and fill in (never commit .dev.vars).
+# Get key from October: ANYRENT → Configuraciónes → AnyRent API → Clave API
+# Prefer rotating the key with Jedeye after chat exposure.
+ANYRENT_API_KEY=
