@@ -5,6 +5,11 @@ workers_dev = true
 # Staging account (Fer). Required for `wrangler deploy` / GitHub Actions.
 account_id = "d612886b0f95fe3fc7adf0647e69dd40"
 
+# Workers Logs (dashboard Observability). Free plan: 200k events/day, 3-day retention.
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 # Public defaults (no secrets). Override via wrangler secret / .dev.vars.
 [vars]
 ANYRENT_API_BASE = "https://readyrac.api.anyrent.pt/v1"

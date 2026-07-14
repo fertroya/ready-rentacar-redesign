@@ -87,6 +87,8 @@ Optional: create GitHub Environment `bff-staging` later if you want approval gat
 
 `ANYRENT_API_KEY` stays as a **Worker secret** (`wrangler secret put`); Actions deploy does not rewrite it.
 
+Workers Logs: `[observability] enabled = true` in `wrangler.toml` (dashboard → Worker → Observability).
+
 ## Frontend wire (read-only)
 
 Default mock mode is **`bff`** (`merged/js`): quote step loads `/api/prices` from the Worker.
