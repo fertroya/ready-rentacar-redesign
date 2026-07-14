@@ -1,0 +1,54 @@
+name: BFF Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "bff/**"
+      - ".github/workflows/bff-deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: bff-deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: wrangler deploy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bff
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: bff/package-lock.json
+
+      - run: npm ci
+      - run: npm run ci
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: bff
+          command: deploy
+
+      - name: Smoke health
+        run: |
+          set -euo pipefail
+          URL="https://ready-rentacar-bff.ready-rentacar-ft.workers.dev/health"
+          for i in 1 2 3 4 5; do
+            if curl -fsS "$URL" | grep -q '"ok":true'; then
+              echo "health ok"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "health check failed" >&2
+          exit 1

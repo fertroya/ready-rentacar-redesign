@@ -41,7 +41,10 @@ Mock default engine = **BFF** (live prices, no bookings/payments). Footer toggle
 ```bash
 cd bff && npm install && cp .dev.vars.example .dev.vars
 # set ANYRENT_API_KEY, then:
-npm run dev
+npm run dev   # Wrangler = Cloudflare Workers CLI
+npm run ci    # typecheck + tests
 ```
+
+GitHub Actions: **BFF CI** / **BFF Deploy** (Wrangler) + **Site CI** for `merged/`. Docs: [docs/BFF.md](./docs/BFF.md).
 
 Logo retained from Ready.

@@ -53,19 +53,37 @@ curl -s 'http://127.0.0.1:8787/api/prices?pickup_station=bariloche&dropoff_stati
 
 ## Deploy
 
-Cuenta usada para staging: Cloudflare de desarrollo (subdominio `ready-rentacar-ft.workers.dev`).
+**Wrangler** is Cloudflare’s official CLI for Workers (build/dev/deploy/tail). Not a nickname we invented — see [developers.cloudflare.com/workers/wrangler](https://developers.cloudflare.com/workers/wrangler/).
+
+Cuenta staging: subdominio `ready-rentacar-ft.workers.dev`.
 
 ```bash
 npx wrangler secret put ANYRENT_API_KEY
 npm run deploy
 ```
 
-URL staging actual:
+URL staging:
 
 `https://ready-rentacar-bff.ready-rentacar-ft.workers.dev`
 
 Luego se puede apuntar `api.readyrentacar.com.ar` CNAME al worker (cutover / F6).
 
+## CI / CD (GitHub Actions)
+
+| Workflow | Trigger | What |
+|----------|---------|------|
+| `BFF CI` | PR / push `bff/**` | `npm ci` → typecheck + vitest |
+| `BFF Deploy` | push `main` on `bff/**` (or manual) | CI + `wrangler deploy` + `/health` smoke |
+| `Site CI` | PR / push `merged/**` | `node --check` on mock JS (Pages already publishes from `main`) |
+
+Repo secrets (Settings → Secrets → Actions):
+
+| Secret | Purpose |
+|--------|---------|
+| `CLOUDFLARE_API_TOKEN` | Token with **Account → Workers Scripts → Edit** (+ read account) |
+| `CLOUDFLARE_ACCOUNT_ID` | `d612886b0f95fe3fc7adf0647e69dd40` (also in `wrangler.toml`) |
+
+Optional: create GitHub Environment `bff-staging` later if you want approval gates.
 ## Frontend wire (read-only)
 
 Default mock mode is **`bff`** (`merged/js`): quote step loads `/api/prices` from the Worker.

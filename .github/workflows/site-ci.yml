@@ -1,0 +1,34 @@
+name: Site CI
+
+on:
+  pull_request:
+    paths:
+      - "merged/**"
+      - ".github/workflows/site-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "merged/**"
+      - ".github/workflows/site-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    name: merged JS syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: node --check
+        run: |
+          set -euo pipefail
+          for f in merged/js/*.js; do
+            echo "check $f"
+            node --check "$f"
+          done
+      - name: remind Pages
+        run: |
+          echo "Static site deploys via GitHub Pages (source: main /)."
+          echo "Live: https://fertroya.github.io/ready-rentacar-redesign/merged/"
