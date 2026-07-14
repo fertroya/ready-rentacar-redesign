@@ -84,6 +84,9 @@ Repo secrets (Settings → Secrets → Actions):
 | `CLOUDFLARE_ACCOUNT_ID` | `d612886b0f95fe3fc7adf0647e69dd40` (also in `wrangler.toml`) |
 
 Optional: create GitHub Environment `bff-staging` later if you want approval gates.
+
+`ANYRENT_API_KEY` stays as a **Worker secret** (`wrangler secret put`); Actions deploy does not rewrite it.
+
 ## Frontend wire (read-only)
 
 Default mock mode is **`bff`** (`merged/js`): quote step loads `/api/prices` from the Worker.
