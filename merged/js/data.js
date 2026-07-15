@@ -119,7 +119,7 @@ window.READY_DATA = {
     {
       id: "chains",
       liveCode: "cadenas-de-nieve",
-      icon: "⛓",
+      img: "assets/extras/chains.png",
       pricing: "once",
       amount: 40000,
       maxQty: 1,
@@ -129,7 +129,7 @@ window.READY_DATA = {
     {
       id: "infant",
       liveCode: "silla-bebe",
-      icon: "👶",
+      img: "assets/extras/infant-seat.png",
       pricing: "daily",
       amount: 9000,
       maxQty: 2,
@@ -138,7 +138,7 @@ window.READY_DATA = {
     {
       id: "child",
       liveCode: "silla-nino",
-      icon: "🧒",
+      img: "assets/extras/child-seat.png",
       pricing: "daily",
       amount: 9000,
       maxQty: 2,

@@ -65,6 +65,13 @@
     return t().extras?.[id] || { name: id, desc: "" };
   }
 
+  function extraIconHtml(ex) {
+    if (ex.img) {
+      return `<img class="extra-photo" src="${BASE}${ex.img}" alt="" width="64" height="64" loading="lazy" />`;
+    }
+    return `<span class="extra-emoji" aria-hidden="true">${ex.icon || ""}</span>`;
+  }
+
   function normalizeExtras(raw) {
     const map = raw && typeof raw === "object" ? raw : {};
     const out = {};
@@ -490,7 +497,7 @@
           const copy = exDict[ex.id] || { name: ex.id, desc: "" };
           return `
             <article class="extra-card">
-              <div class="extra-icon" aria-hidden="true">${ex.icon}</div>
+              <div class="extra-icon" aria-hidden="true">${extraIconHtml(ex)}</div>
               <h3>${copy.name}</h3>
               <p>${copy.desc}</p>
               <div class="extra-meta">
@@ -684,7 +691,7 @@
         const copy = exDict[ex.id] || { name: ex.id, desc: "" };
         return `
           <article class="extra-card">
-            <div class="extra-icon" aria-hidden="true">${ex.icon}</div>
+            <div class="extra-icon" aria-hidden="true">${extraIconHtml(ex)}</div>
             <h3>${copy.name}</h3>
             <p>${copy.desc}</p>
             <div class="extra-meta">
@@ -1240,7 +1247,7 @@
             const on = qty > 0;
             return `
               <button type="button" class="extra-row extra-toggle ${on ? "is-on" : ""}" data-extra-toggle="${ex.id}" aria-pressed="${on}">
-                <div class="extra-icon" aria-hidden="true">${ex.icon}</div>
+                <div class="extra-icon" aria-hidden="true">${extraIconHtml(ex)}</div>
                 <div class="extra-copy">
                   <h4>${title}</h4>
                   <p>${copy.desc} · ${price}</p>
@@ -1250,7 +1257,7 @@
           }
           return `
             <div class="extra-row ${qty ? "is-on" : ""}" data-extra-row="${ex.id}">
-              <div class="extra-icon" aria-hidden="true">${ex.icon}</div>
+              <div class="extra-icon" aria-hidden="true">${extraIconHtml(ex)}</div>
               <div class="extra-copy">
                 <h4>${title}</h4>
                 <p>${copy.desc} · ${price}</p>
