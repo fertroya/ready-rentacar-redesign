@@ -753,7 +753,7 @@ h3 { font-size: 1.25rem; margin: 0 0 8px; }
   /* Fixed cinematic: vehicle on the road, El Calafate / Patagonia Andes.
      Balance sky/mountains (upper) with road/vehicle (lower). */
   background-image: url("https://images.unsplash.com/photo-1736390739668-0547022f10af?auto=format&fit=crop&w=2200&q=85");
-  background-position: center 58%;
+  background-position: center 69%;
   background-size: cover;
   transform: scale(1.06);
   animation: quoteDriftLow 32s ease-in-out infinite alternate;
