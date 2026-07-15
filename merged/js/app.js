@@ -17,6 +17,37 @@
   const BASE = detectBase();
   DATA.basePath = BASE;
 
+  const THEMES = ["patagonia", "corporate", "slate"];
+
+  function getTheme() {
+    const url = new URL(window.location.href);
+    const q = url.searchParams.get("theme");
+    if (q && THEMES.includes(q)) {
+      localStorage.setItem("ready_theme", q);
+      return q;
+    }
+    const stored = localStorage.getItem("ready_theme");
+    return THEMES.includes(stored) ? stored : "patagonia";
+  }
+
+  function setTheme(theme, { reload = false } = {}) {
+    if (!THEMES.includes(theme)) theme = "patagonia";
+    localStorage.setItem("ready_theme", theme);
+    document.documentElement.setAttribute("data-theme", theme);
+    const url = new URL(window.location.href);
+    url.searchParams.set("theme", theme);
+    if (reload) {
+      window.location.href = url.toString();
+      return;
+    }
+    window.history.replaceState({}, "", url);
+    document.querySelectorAll("[data-theme-opt]").forEach((btn) => {
+      btn.classList.toggle("is-active", btn.dataset.themeOpt === theme);
+    });
+  }
+
+  setTheme(getTheme());
+
   function getLang() {
     const url = new URL(location.href);
     const q = url.searchParams.get("lang");
@@ -31,6 +62,7 @@
     localStorage.setItem("ready_lang", lang);
     const url = new URL(location.href);
     url.searchParams.set("lang", lang);
+    url.searchParams.set("theme", getTheme());
     history.replaceState({}, "", url);
     applyI18n();
   }
@@ -45,6 +77,7 @@
 
   function href(page) {
     const lang = getLang();
+    const theme = getTheme();
     const map = {
       home: "index.html",
       fleet: "fleet.html",
@@ -58,7 +91,7 @@
       faqs: "faqs.html",
       contact: "contact.html",
     };
-    return `${BASE}${map[page] || "index.html"}?lang=${lang}`;
+    return `${BASE}${map[page] || "index.html"}?lang=${lang}&theme=${theme}`;
   }
 
   function extraCopy(id) {
@@ -179,6 +212,12 @@
           .join("")}
       </nav>
       <div class="nav-actions">
+        <div class="theme-switch" role="group" aria-label="${dict.theme?.label || "Theme"}">
+          ${THEMES.map((th) => {
+            const label = dict.theme?.[th] || th;
+            return `<button type="button" data-theme-opt="${th}" class="${getTheme() === th ? "is-active" : ""}" title="${label}" aria-label="${label}"></button>`;
+          }).join("")}
+        </div>
         <div class="lang-switch" role="group" aria-label="Language">
           ${["en", "es", "pt"]
             .map(
@@ -194,6 +233,9 @@
     `;
     el.querySelectorAll("[data-lang]").forEach((btn) => {
       btn.addEventListener("click", () => setLang(btn.dataset.lang));
+    });
+    el.querySelectorAll("[data-theme-opt]").forEach((btn) => {
+      btn.addEventListener("click", () => setTheme(btn.dataset.themeOpt));
     });
     const toggle = el.querySelector("#menu-toggle");
     const nav = el.querySelector("#nav-links");

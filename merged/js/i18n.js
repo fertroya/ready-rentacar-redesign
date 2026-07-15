@@ -1,6 +1,12 @@
 window.READY_I18N = {
   en: {
     langName: "EN",
+    theme: {
+      label: "Color theme",
+      patagonia: "Patagonia",
+      corporate: "Corporate",
+      slate: "Slate",
+    },
     nav: {
       fleet: "Fleet",
       stations: "Stations",
@@ -295,6 +301,12 @@ window.READY_I18N = {
   },
   es: {
     langName: "ES",
+    theme: {
+      label: "Tema de color",
+      patagonia: "Patagonia",
+      corporate: "Corporativo",
+      slate: "Pizarra",
+    },
     nav: {
       fleet: "Flota",
       stations: "Estaciones",
@@ -590,6 +602,12 @@ window.READY_I18N = {
   },
   pt: {
     langName: "PT",
+    theme: {
+      label: "Tema de cor",
+      patagonia: "Patagônia",
+      corporate: "Corporativo",
+      slate: "Ardósia",
+    },
     nav: {
       fleet: "Frota",
       stations: "Estações",
