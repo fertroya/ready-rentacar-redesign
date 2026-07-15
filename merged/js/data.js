@@ -106,6 +106,13 @@ window.READY_DATA = {
   ],
   winterDaily: 18000,
   premiumDaily: 25000,
+  totalDaily: 40000,
+  /** Demo excess/deposit when Engine ≠ BFF (ARS, approximate). */
+  demoInsurance: {
+    cdw: { excess: 1900000, deposit: 600000 },
+    premium: { excess: 450000, deposit: 250000 },
+    total: { excess: 0, deposit: 500000 },
+  },
   // Live AnyRent cloud API codes (see docs/ANYRENT-INTEGRATION.md Path L)
   // Prices still demo until BFF has rates:read
   extras: [
@@ -189,6 +196,26 @@ window.READY_DATA = {
     { id: "premium", liveCode: "PCDW", required: false },
     { id: "total", liveCode: "SEGURO TOTAL", required: false },
   ],
+  /**
+   * Optional A — Invernalia-style include matrix (static marketing rows).
+   * Prices / excess / deposit still come from AnyRent when BFF is on.
+   * Gated by features.insuranceMatrix (or ?ff=insuranceMatrix).
+   */
+  coverageCompare: {
+    plans: ["cdw", "premium", "total"],
+    rows: [
+      { id: "collision", cdw: true, premium: true, total: true },
+      { id: "theft", cdw: true, premium: true, total: true },
+      { id: "thirdParty", cdw: true, premium: true, total: true },
+      { id: "glassLocks", cdw: false, premium: true, total: true },
+      { id: "roadside", cdw: false, premium: true, total: true },
+      { id: "zeroExcess", cdw: false, premium: false, total: true },
+    ],
+  },
+  // Feature flags (override with ?ff=name or footer toggle)
+  features: {
+    insuranceMatrix: false,
+  },
   api: {
     baseUrl: "https://readyrac.api.anyrent.pt/v1",
     // Key must live only in a server BFF — never in this file or the browser

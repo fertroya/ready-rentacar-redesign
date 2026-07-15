@@ -593,6 +593,61 @@ h3 { font-size: 1.25rem; margin: 0 0 8px; }
 .summary-extras li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
 .summary-extras li span:last-child { font-weight: 600; white-space: nowrap; }
 
+/* Optional A — coverage matrix (feature flag) */
+.cover-matrix { margin: 0 0 20px; }
+.cover-head { margin: 0 0 12px; }
+.cover-head h3 { margin: 0 0 4px; font-family: var(--font-display); font-size: 1.15rem; }
+.cover-head p { margin: 0; color: var(--muted); font-size: .9rem; }
+.cover-flag {
+  display: inline-block; margin-top: 8px; font-size: .68rem; font-weight: 800;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: var(--glacier-deep); background: rgba(110, 184, 201, 0.22);
+  border-radius: 999px; padding: 3px 8px;
+}
+.cover-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.cover-card {
+  display: flex; flex-direction: column; gap: 10px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 12px; background: #fff; cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.cover-card input { position: absolute; opacity: 0; pointer-events: none; }
+.cover-card:hover { border-color: var(--lake); }
+.cover-card.is-selected {
+  border-color: var(--lake);
+  background: rgba(19, 78, 69, 0.06);
+  box-shadow: 0 0 0 1px var(--lake);
+}
+.cover-card-top strong { display: block; font-size: .95rem; }
+.cover-hint { display: block; font-size: .75rem; color: var(--muted); margin-top: 2px; }
+.cover-price {
+  margin-top: 8px; font-weight: 800; font-size: 1rem; color: var(--lake-deep);
+}
+.cover-features { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; flex: 1; }
+.cover-features li {
+  display: grid; grid-template-columns: 1rem 1fr; gap: 6px; align-items: start;
+  font-size: .78rem; color: var(--ink);
+}
+.cover-features li.is-no { color: var(--muted); }
+.cover-features li.is-yes span { color: var(--ok); font-weight: 700; }
+.cover-money {
+  display: grid; gap: 4px; font-size: .75rem;
+  border-top: 1px solid var(--line); padding-top: 8px;
+}
+.cover-money div { display: flex; justify-content: space-between; gap: 8px; }
+.cover-money span { color: var(--muted); }
+.cover-cta {
+  display: block; text-align: center; font-size: .78rem; font-weight: 700;
+  padding: 7px 8px; border-radius: 8px; background: #e4ebe8; color: var(--ink);
+}
+.cover-card.is-selected .cover-cta {
+  background: var(--lake); color: var(--snow);
+}
+
 .quote-layout {
   display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; align-items: start;
 }
@@ -718,7 +773,7 @@ button.engine-toggle:hover {
   .nav-actions .btn-ghost,
   .nav-actions .btn-header-quote { display: none; }
   .lang-switch button { padding: 6px 8px; }
-  .grid-2, .grid-3, .grid-4, .quote-layout, .footer-grid, .result-row {
+  .grid-2, .grid-3, .grid-4, .quote-layout, .footer-grid, .result-row, .cover-grid {
     grid-template-columns: 1fr;
   }
   .hero {

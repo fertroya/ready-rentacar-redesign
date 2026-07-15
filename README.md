@@ -36,7 +36,9 @@ Cloudflare Worker under **[`bff/`](./bff/)** proxies `stations` / `fleets` / `op
 
 Live: https://ready-rentacar-bff.ready-rentacar-ft.workers.dev  
 
-Mock default engine = **BFF** (live prices, no bookings/payments). Footer toggles BFF ↔ DEMO. Docs: **[docs/BFF.md](./docs/BFF.md)**.
+Mock default engine = **BFF** (live prices, no bookings/payments). Footer toggles BFF ↔ DEMO.  
+
+**Optional A (coverage matrix):** off by default. Enable with footer **FF: Matrix** or `?ff=insuranceMatrix`.
 
 ```bash
 cd bff && npm install && cp .dev.vars.example .dev.vars

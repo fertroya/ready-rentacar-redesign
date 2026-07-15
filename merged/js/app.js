@@ -217,6 +217,7 @@
             <span class="int-pill">WhatsApp</span>
             <span class="int-pill">EN · ES · PT</span>
             <button type="button" class="int-pill engine-toggle" id="engine-toggle" title="Demo rates vs live AnyRent handoff"></button>
+            <button type="button" class="int-pill engine-toggle" id="ff-matrix-toggle" title="Optional A: insurance matrix"></button>
           </div>
         </div>
         <div>
@@ -264,6 +265,16 @@
             : "Local demo rates";
       engineBtn.addEventListener("click", () => {
         window.READY_JEDEYE.cycleEngineMode();
+        location.reload();
+      });
+    }
+    const ffBtn = el.querySelector("#ff-matrix-toggle");
+    if (ffBtn && window.READY_FLAGS) {
+      const on = window.READY_FLAGS.isEnabled("insuranceMatrix");
+      ffBtn.textContent = on ? "FF: Matrix ON" : "FF: Matrix OFF";
+      ffBtn.setAttribute("aria-pressed", String(on));
+      ffBtn.addEventListener("click", () => {
+        window.READY_FLAGS.toggle("insuranceMatrix");
         location.reload();
       });
     }
@@ -783,6 +794,50 @@
       return window.READY_JEDEYE?.engineMode() === "bff" && window.READY_BFF;
     }
 
+    function useCoverMatrix() {
+      return Boolean(window.READY_FLAGS?.isEnabled("insuranceMatrix"));
+    }
+
+    function planLabel(id) {
+      if (id === "total") return q.coverPlanTotal || "Total";
+      if (id === "premium") return q.coverPlanPremium || "Premium";
+      return q.coverPlanCdw || "Basic CDW";
+    }
+
+    function resolveInsurancePlan(stored) {
+      if (useCoverMatrix()) {
+        const p = stored.insurancePlan || (stored.premium ? "premium" : "cdw");
+        return p === "total" || p === "premium" ? p : "cdw";
+      }
+      return stored.premium ? "premium" : "cdw";
+    }
+
+    function insuranceQuote(plan, days, live) {
+      const demo = DATA.demoInsurance?.[plan] || DATA.demoInsurance?.cdw || {};
+      if (live && window.READY_BFF) {
+        const code = DATA.insurances.find((i) => i.id === plan)?.liveCode;
+        const hit = window.READY_BFF.insuranceDaily(live.insurances, code);
+        if (hit) {
+          return {
+            daily: hit.daily,
+            cost: hit.daily * days,
+            excess: hit.excess,
+            deposit: hit.deposit,
+            name: hit.name || planLabel(plan),
+          };
+        }
+      }
+      const daily =
+        plan === "total" ? DATA.totalDaily || 0 : plan === "premium" ? DATA.premiumDaily || 0 : 0;
+      return {
+        daily,
+        cost: daily * days,
+        excess: demo.excess ?? null,
+        deposit: demo.deposit ?? null,
+        name: planLabel(plan),
+      };
+    }
+
     function tripKey(t) {
       return [t.pickup, t.dropoff, t.from, t.until, t.oneway ? "1" : "0"].join("|");
     }
@@ -793,7 +848,10 @@
         p.hidden = Number(p.dataset.qpanel) !== n;
       });
       pills.forEach((p) => p.classList.toggle("is-active", Number(p.dataset.qstep) === n));
-      if (n === 3) renderExtras();
+      if (n === 3) {
+        renderCoverMatrix();
+        renderExtras();
+      }
       renderSummary();
     }
 
@@ -820,6 +878,14 @@
         Boolean(trip.extras?.child || trip.extras?.infant || trip.extras?.booster);
     }
     if (trip.premium) premium.checked = true;
+    const simplePremium = form.querySelector("[data-premium-simple]");
+    if (simplePremium) simplePremium.hidden = useCoverMatrix();
+    if (useCoverMatrix() && !TRIP.load().insurancePlan) {
+      TRIP.save({
+        insurancePlan: trip.premium ? "premium" : "cdw",
+        premium: Boolean(trip.premium),
+      });
+    }
     dropWrap.hidden = !oneway.checked;
 
     form.querySelector("#q-step1-label").textContent = q.step1;
@@ -898,6 +964,8 @@
         });
         const pcdw = window.READY_BFF.insuranceDaily(sample.insurances, "PCDW");
         if (pcdw) DATA.premiumDaily = pcdw.daily;
+        const total = window.READY_BFF.insuranceDaily(sample.insurances, "SEGURO TOTAL");
+        if (total) DATA.totalDaily = total.daily;
       }
       renderCars();
       show(2);
@@ -947,7 +1015,14 @@
         until: until.value,
         winter: winter.checked,
         wantChild: Boolean(wantChild?.checked),
-        premium: premium.checked,
+        premium: useCoverMatrix()
+          ? resolveInsurancePlan(TRIP.load()) === "premium"
+          : premium.checked,
+        insurancePlan: useCoverMatrix()
+          ? resolveInsurancePlan(TRIP.load())
+          : premium.checked
+            ? "premium"
+            : "cdw",
         onewayFee: isOne ? onewayFee(pickup.value, dropoff.value) : 0,
         age21: true,
         pay: form.querySelector('input[name="pay"]:checked')?.value || "mercadopago",
@@ -984,6 +1059,82 @@
         lines.push({ id: ex.id, name: exDict[ex.id]?.name || ex.id, qty, amount });
       });
       return { total, lines };
+    }
+
+    function renderCoverMatrix() {
+      const box = document.getElementById("cover-matrix");
+      if (!box) return;
+      if (!useCoverMatrix()) {
+        box.hidden = true;
+        box.innerHTML = "";
+        return;
+      }
+      box.hidden = false;
+      const stored = TRIP.load();
+      const plan = resolveInsurancePlan(stored);
+      const days = daysBetween(from.value, until.value);
+      const live = liveForCar(stored.carId);
+      const rows = DATA.coverageCompare?.rows || [];
+      const rowNames = q.coverRows || {};
+      const plans = DATA.coverageCompare?.plans || ["cdw", "premium", "total"];
+      const meta = {
+        cdw: { title: q.coverPlanCdw, hint: q.coverPlanCdwHint },
+        premium: { title: q.coverPlanPremium, hint: q.coverPlanPremiumHint },
+        total: { title: q.coverPlanTotal, hint: q.coverPlanTotalHint },
+      };
+
+      const cards = plans
+        .map((id) => {
+          const quote = insuranceQuote(id, days, live);
+          const selected = plan === id;
+          const priceLine =
+            quote.daily <= 0
+              ? q.coverIncluded || "Included"
+              : `${money(quote.daily)}${q.coverPerDay || "/ day"}`;
+          const features = rows
+            .map((row) => {
+              const ok = Boolean(row[id]);
+              return `<li class="${ok ? "is-yes" : "is-no"}"><span aria-hidden="true">${ok ? "✓" : "–"}</span> ${rowNames[row.id] || row.id}</li>`;
+            })
+            .join("");
+          return `
+            <label class="cover-card ${selected ? "is-selected" : ""}">
+              <input type="radio" name="insurancePlan" value="${id}" ${selected ? "checked" : ""} />
+              <div class="cover-card-top">
+                <strong>${meta[id]?.title || id}</strong>
+                <span class="cover-hint">${meta[id]?.hint || ""}</span>
+                <div class="cover-price">${priceLine}</div>
+              </div>
+              <ul class="cover-features">${features}</ul>
+              <div class="cover-money">
+                <div><span>${q.coverExcess || "Excess"}</span><strong>${quote.excess != null ? money(quote.excess) : "—"}</strong></div>
+                <div><span>${q.coverDeposit || "Deposit"}</span><strong>${quote.deposit != null ? money(quote.deposit) : "—"}</strong></div>
+              </div>
+              <span class="cover-cta">${selected ? q.coverSelected || "Selected" : q.coverSelect || "Select"}</span>
+            </label>`;
+        })
+        .join("");
+
+      box.innerHTML = `
+        <div class="cover-head">
+          <h3>${q.coverTitle || "Coverage"}</h3>
+          <p>${q.coverLede || ""}</p>
+          <span class="cover-flag">${q.coverFlagNote || "Optional A"}</span>
+        </div>
+        <div class="cover-grid" role="radiogroup" aria-label="${q.coverTitle || "Coverage"}">${cards}</div>
+      `;
+      box.querySelectorAll('input[name="insurancePlan"]').forEach((input) => {
+        input.addEventListener("change", () => {
+          const next = input.value;
+          TRIP.save({
+            insurancePlan: next,
+            premium: next === "premium",
+          });
+          if (premium) premium.checked = next === "premium";
+          renderCoverMatrix();
+          renderSummary();
+        });
+      });
     }
 
     function renderExtras() {
@@ -1102,24 +1253,25 @@
 
       let rental = car ? car.daily * days : 0;
       let fee = cur.oneway ? onewayFee(cur.pickup, cur.dropoff) : 0;
-      let premiumCost = cur.premium ? DATA.premiumDaily * days : 0;
+      const plan = resolveInsurancePlan(cur);
+      cur.insurancePlan = plan;
+      cur.premium = plan === "premium";
       let { total: extrasTotal, lines: extrasLines } = extrasCost(cur.extras, days);
       let deposit = null;
       let excess = null;
+      let cover = insuranceQuote(plan, days, usingLive ? live : null);
+      let premiumCost = cover.cost;
+      deposit = cover.deposit;
+      excess = cover.excess;
 
       if (usingLive) {
         rental = live.totalAfterTax;
         fee = 0;
-        const pcdw = window.READY_BFF.insuranceDaily(live.insurances, "PCDW");
-        if (cur.premium && pcdw) premiumCost = pcdw.daily * days;
-        else premiumCost = 0;
+        cover = insuranceQuote(plan, days, live);
+        premiumCost = cover.cost;
+        deposit = cover.deposit;
+        excess = cover.excess;
         ({ total: extrasTotal, lines: extrasLines } = extrasCostLive(cur.extras, days, live));
-        excess = live.excess;
-        deposit = live.deposit;
-        if (cur.premium && pcdw) {
-          excess = pcdw.excess;
-          deposit = pcdw.deposit;
-        }
       }
 
       const winterCost = 0;
@@ -1127,6 +1279,9 @@
       const box = document.getElementById("quote-summary");
       const st = dict.stations;
       const payLabel = cur.pay === "stripe" ? q.payStripe : q.payMp;
+      const coverLineLabel = useCoverMatrix()
+        ? `${q.lineCoverage || "Coverage"} (${planLabel(plan)})`
+        : q.linePremium;
       const extrasHtml = extrasLines.length
         ? `<ul class="summary-extras">${extrasLines
             .map((l) => `<li><span>${l.name}${l.qty > 1 ? ` ×${l.qty}` : ""}</span><span>${money(l.amount)}</span></li>`)
@@ -1135,8 +1290,8 @@
       const sourceNote = usingLive
         ? q.bffNote || "Live rates via BFF · no booking created · payment not connected yet"
         : q.demoNote;
-      const depHtml =
-        usingLive && (deposit != null || excess != null)
+      const showDep = (useCoverMatrix() || usingLive) && (deposit != null || excess != null);
+      const depHtml = showDep
           ? `<div><dt>${q.lineDeposit || "Deposit"}</dt><dd>${money(deposit || 0)}</dd></div>
              <div><dt>${q.lineExcess || "Excess"}</dt><dd>${money(excess || 0)}</dd></div>`
           : "";
@@ -1155,7 +1310,7 @@
           <div><dt>${q.lineRental}</dt><dd>${car ? money(rental) : "—"}</dd></div>
           <div><dt>${q.lineOneway}</dt><dd>${usingLive ? q.includedInRate || "Included in rate" : money(fee)}</dd></div>
           <div><dt>${q.lineExtras}</dt><dd>${money(extrasTotal)}</dd></div>
-          <div><dt>${q.linePremium}</dt><dd>${money(premiumCost)}</dd></div>
+          <div><dt>${coverLineLabel}</dt><dd>${money(premiumCost)}</dd></div>
           ${depHtml}
           <div><dt>${q.lineTotal}</dt><dd>${money(total)}</dd></div>
           <div><dt>${q.step5}</dt><dd>${payLabel}</dd></div>
