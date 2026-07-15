@@ -3,9 +3,10 @@ window.READY_I18N = {
     langName: "EN",
     theme: {
       label: "Color theme",
-      patagonia: "Patagonia",
-      corporate: "Corporate",
-      slate: "Slate",
+      patagonia: "Patagonia expedition",
+      corporate: "Corporate fleet",
+      slate: "Noir editorial",
+      short: { patagonia: "Expe", corporate: "Corp", slate: "Noir" },
     },
     nav: {
       fleet: "Fleet",
@@ -303,9 +304,10 @@ window.READY_I18N = {
     langName: "ES",
     theme: {
       label: "Tema de color",
-      patagonia: "Patagonia",
-      corporate: "Corporativo",
-      slate: "Pizarra",
+      patagonia: "Expedición Patagonia",
+      corporate: "Flota corporativa",
+      slate: "Noir editorial",
+      short: { patagonia: "Expe", corporate: "Corp", slate: "Noir" },
     },
     nav: {
       fleet: "Flota",
@@ -604,9 +606,10 @@ window.READY_I18N = {
     langName: "PT",
     theme: {
       label: "Tema de cor",
-      patagonia: "Patagônia",
-      corporate: "Corporativo",
-      slate: "Ardósia",
+      patagonia: "Expedição Patagônia",
+      corporate: "Frota corporativa",
+      slate: "Noir editorial",
+      short: { patagonia: "Expe", corporate: "Corp", slate: "Noir" },
     },
     nav: {
       fleet: "Frota",

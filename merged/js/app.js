@@ -215,7 +215,7 @@
         <div class="theme-switch" role="group" aria-label="${dict.theme?.label || "Theme"}">
           ${THEMES.map((th) => {
             const label = dict.theme?.[th] || th;
-            return `<button type="button" data-theme-opt="${th}" class="${getTheme() === th ? "is-active" : ""}" title="${label}" aria-label="${label}"></button>`;
+            return `<button type="button" data-theme-opt="${th}" class="${getTheme() === th ? "is-active" : ""}" title="${label}" aria-label="${label}"><span class="theme-dot" aria-hidden="true"></span>${dict.theme?.short?.[th] || th}</button>`;
           }).join("")}
         </div>
         <div class="lang-switch" role="group" aria-label="Language">
