@@ -893,11 +893,10 @@
     from.value = trip.from || "2026-08-01T10:00";
     until.value = trip.until || "2026-08-08T10:00";
     oneway.checked = Boolean(trip.oneway) || trip.pickup !== trip.dropoff;
-    winter.checked = Boolean(trip.winter) || isWinterSeason(from.value);
-    if (wantChild) {
-      wantChild.checked =
-        Boolean(trip.wantChild) ||
-        Boolean(trip.extras?.child || trip.extras?.infant);
+    // Prefill extras once from home search flags (winter / child) — not shown again in step 1
+    const seeded = seedExtrasFromFlags(trip);
+    if (JSON.stringify(seeded) !== JSON.stringify(normalizeExtras(trip.extras))) {
+      TRIP.save({ extras: seeded });
     }
     if (!TRIP.load().insurancePlan) {
       TRIP.save({
@@ -956,9 +955,7 @@
       }
       setError("");
       const payload = readTrip();
-      if (payload.winter || payload.wantChild) {
-        payload.extras = seedExtrasFromFlags({ ...TRIP.load(), ...payload });
-      }
+      payload.extras = seedExtrasFromFlags({ ...TRIP.load(), ...payload });
       TRIP.save(payload);
       await loadBffQuote(true);
       if (useBff() && bffQuote?.groups?.[0]) {
@@ -1051,8 +1048,10 @@
         oneway: isOne,
         from: from.value,
         until: until.value,
-        winter: winter.checked,
-        wantChild: Boolean(wantChild?.checked),
+        winter: Boolean(TRIP.load().winter) || Boolean(normalizeExtras(TRIP.load().extras).chains),
+        wantChild:
+          Boolean(TRIP.load().wantChild) ||
+          Boolean(normalizeExtras(TRIP.load().extras).child || normalizeExtras(TRIP.load().extras).infant),
         premium: plan === "premium",
         insurancePlan: plan,
         onewayFee: isOne ? onewayFee(pickup.value, dropoff.value) : 0,
@@ -1214,13 +1213,9 @@
     function persistExtras(map) {
       TRIP.save({
         extras: map,
-        winter: Boolean(map.chains) || winter.checked,
-        wantChild: Boolean(map.child || map.infant) || Boolean(wantChild?.checked),
+        winter: Boolean(map.chains),
+        wantChild: Boolean(map.child || map.infant),
       });
-      if (map.chains) winter.checked = true;
-      if (map.child || map.infant) {
-        if (wantChild) wantChild.checked = true;
-      }
       renderSummary();
     }
 
