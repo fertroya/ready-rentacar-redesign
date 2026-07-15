@@ -856,14 +856,14 @@
       if (!media) return;
       const carId = TRIP.load().carId;
       const car = DATA.cars.find((c) => c.id === carId);
-      const live = carId ? liveForCar(carId) : null;
-      const img = step === 2 && car ? live?.imageUrl || carImg(car) : "";
+      // Lifestyle/scene heroes only — never catalog thumbnails
+      const img = step === 2 && car?.hero ? car.hero : "";
       if (img) {
         media.style.backgroundImage = `url("${img}")`;
-        media.classList.add("is-fleet-hero");
+        media.classList.add("is-model-hero");
       } else {
         media.style.backgroundImage = "";
-        media.classList.remove("is-fleet-hero");
+        media.classList.remove("is-model-hero");
       }
     }
 
