@@ -867,6 +867,7 @@
       }
     }
 
+    function updateStepChrome() {
       pills.forEach((p) => {
         const n = Number(p.dataset.qstep);
         p.classList.toggle("is-active", n === step);
