@@ -751,19 +751,19 @@ h3 { font-size: 1.25rem; margin: 0 0 8px; }
 }
 .quote-stage[data-step="2"] .quote-stage-media {
   /* Fixed cinematic: vehicle on the road, El Calafate / Patagonia Andes.
-     Focal point is in the lower half — pin low so we don't crop to sky only. */
+     Balance sky/mountains (upper) with road/vehicle (lower). */
   background-image: url("https://images.unsplash.com/photo-1736390739668-0547022f10af?auto=format&fit=crop&w=2200&q=85");
-  background-position: center 78%;
+  background-position: center 58%;
   background-size: cover;
-  transform: scale(1.08);
+  transform: scale(1.06);
   animation: quoteDriftLow 32s ease-in-out infinite alternate;
 }
 .quote-stage[data-step="2"].is-shifting .quote-stage-media {
   animation: quoteDriftLow 32s ease-in-out infinite alternate, quoteFlash .55s ease;
 }
 @keyframes quoteDriftLow {
-  from { transform: scale(1.08) translate3d(0, 0, 0); }
-  to { transform: scale(1.12) translate3d(-1%, 1.2%, 0); }
+  from { transform: scale(1.06) translate3d(0, 0, 0); }
+  to { transform: scale(1.1) translate3d(-0.8%, 0.6%, 0); }
 }
 .quote-stage[data-step="3"] .quote-stage-media {
   background-image: url("https://images.unsplash.com/photo-1483728642387-6c3bdd17bb6b?auto=format&fit=crop&w=2200&q=85");
