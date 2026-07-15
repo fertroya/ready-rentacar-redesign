@@ -750,19 +750,9 @@ h3 { font-size: 1.25rem; margin: 0 0 8px; }
   background-image: url("https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2200&q=85");
 }
 .quote-stage[data-step="2"] .quote-stage-media {
-  background-image: url("https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=2200&q=85");
-}
-.quote-stage-media.is-model-hero {
-  background-size: cover !important;
-  background-repeat: no-repeat !important;
-  background-position: center 45% !important;
-  background-color: #0a1412;
-  filter: none;
-  transform: scale(1.05) !important;
-  animation: quoteDrift 28s ease-in-out infinite alternate !important;
-}
-.quote-stage.is-shifting .quote-stage-media.is-model-hero {
-  animation: quoteDrift 28s ease-in-out infinite alternate, quoteFlash .45s ease !important;
+  /* Fixed cinematic: vehicle on the road, El Calafate / Patagonia Andes */
+  background-image: url("https://images.unsplash.com/photo-1736390739668-0547022f10af?auto=format&fit=crop&w=2200&q=85");
+  background-position: center 42%;
 }
 .quote-stage[data-step="3"] .quote-stage-media {
   background-image: url("https://images.unsplash.com/photo-1483728642387-6c3bdd17bb6b?auto=format&fit=crop&w=2200&q=85");

@@ -851,22 +851,6 @@
       return !Number.isNaN(a) && !Number.isNaN(b) && b > a;
     }
 
-    function syncStageMedia() {
-      const media = stage?.querySelector(".quote-stage-media");
-      if (!media) return;
-      const carId = TRIP.load().carId;
-      const car = DATA.cars.find((c) => c.id === carId);
-      // Lifestyle/scene heroes only — never catalog thumbnails
-      const img = step === 2 && car?.hero ? car.hero : "";
-      if (img) {
-        media.style.backgroundImage = `url("${img}")`;
-        media.classList.add("is-model-hero");
-      } else {
-        media.style.backgroundImage = "";
-        media.classList.remove("is-model-hero");
-      }
-    }
-
     function updateStepChrome() {
       pills.forEach((p) => {
         const n = Number(p.dataset.qstep);
@@ -910,7 +894,6 @@
         };
         stickyCta.textContent = labels[step] || q.continue;
       }
-      syncStageMedia();
     }
 
     function goNext() {
@@ -1413,10 +1396,8 @@
           setError("");
           renderCars();
           renderSummary();
-          syncStageMedia();
         });
       });
-      syncStageMedia();
     }
 
     function renderSummary() {
