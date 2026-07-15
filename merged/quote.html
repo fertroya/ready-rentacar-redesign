@@ -11,20 +11,21 @@
 </head>
 <body data-page="quote">
   <header class="site-header" id="site-header"></header>
-  <main id="main" class="page">
+  <main id="main" class="page page-quote">
     <p class="eyebrow">Ready</p>
     <h1 id="page-title">Online quote</h1>
     <p class="lede" id="page-lede"></p>
 
     <div class="quote-layout">
       <form class="quote-panel" id="quote-form">
-        <div class="steps">
-          <span class="step-pill is-active" data-qstep="1" id="q-step1-label">1 · Trip</span>
-          <span class="step-pill" data-qstep="2" id="q-step2-label">2 · Vehicle</span>
-          <span class="step-pill" data-qstep="3" id="q-step3-label">3 · Extras</span>
-          <span class="step-pill" data-qstep="4" id="q-step4-label">4 · Details</span>
-          <span class="step-pill" data-qstep="5" id="q-step5-label">5 · Pay</span>
-        </div>
+        <nav class="steps" aria-label="Quote steps">
+          <button type="button" class="step-pill is-active" data-qstep="1" id="q-step1-label">1 · Trip</button>
+          <button type="button" class="step-pill" data-qstep="2" id="q-step2-label" disabled>2 · Vehicle</button>
+          <button type="button" class="step-pill" data-qstep="3" id="q-step3-label" disabled>3 · Extras</button>
+          <button type="button" class="step-pill" data-qstep="4" id="q-step4-label" disabled>4 · Details</button>
+          <button type="button" class="step-pill" data-qstep="5" id="q-step5-label" disabled>5 · Pay</button>
+        </nav>
+        <p class="field-error" id="quote-error" hidden></p>
 
         <div data-qpanel="1">
           <div class="field" style="margin-bottom:12px">
@@ -49,24 +50,23 @@
               <input type="datetime-local" name="until" />
             </div>
           </div>
+          <p class="hint" data-i18n="quotePage.prefsHint" style="margin:0 0 10px;color:var(--muted);font-size:.88rem"></p>
           <label class="check" style="margin-bottom:10px">
             <input type="checkbox" name="winter" />
             <span data-i18n="search.winter">Snow chains (winter)</span>
           </label>
-          <label class="check" style="margin-bottom:10px">
+          <label class="check" style="margin-bottom:16px">
             <input type="checkbox" name="wantChild" />
             <span data-i18n="search.childSeat">Child seat needed</span>
           </label>
-          <label class="check" style="margin-bottom:16px" data-premium-simple>
-            <input type="checkbox" name="premium" />
-            <span data-i18n="quotePage.premiumLabel">Premium insurance · Mercado Pago 6×</span>
-          </label>
-          <button type="button" class="btn btn-ember" id="to-step-2" data-i18n="quotePage.showCars">Show vehicles</button>
+          <div class="quote-actions">
+            <button type="button" class="btn btn-ember" id="to-step-2" data-i18n="quotePage.showCars">Show vehicles</button>
+          </div>
         </div>
 
         <div data-qpanel="2" hidden>
           <div id="quote-cars"></div>
-          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
+          <div class="quote-actions">
             <button type="button" class="btn btn-ghost" id="back-1" data-i18n="quotePage.back">Back</button>
             <button type="button" class="btn btn-ember" id="to-step-3" data-i18n="quotePage.showExtras">Continue to extras</button>
           </div>
@@ -74,11 +74,11 @@
 
         <div data-qpanel="3" hidden>
           <div id="cover-matrix" class="cover-matrix" hidden></div>
+          <div id="cover-simple" class="cover-simple" hidden></div>
           <p data-i18n="quotePage.extrasLede" style="margin:0 0 14px;color:var(--muted)"></p>
           <div id="quote-extras" class="extras-picker"></div>
-          <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px">
+          <div class="quote-actions">
             <button type="button" class="btn btn-ghost" id="back-2" data-i18n="quotePage.back">Back</button>
-            <button type="button" class="btn btn-ghost" id="skip-extras" data-i18n="quotePage.skipExtras">No extras — continue</button>
             <button type="button" class="btn btn-ember" id="to-step-4" data-i18n="quotePage.continue">Continue</button>
           </div>
         </div>
@@ -86,29 +86,29 @@
         <div data-qpanel="4" hidden>
           <div class="field" style="margin-bottom:12px">
             <label data-i18n="quotePage.name">Name</label>
-            <input name="name" required />
+            <input name="name" autocomplete="name" required />
           </div>
           <div class="field" style="margin-bottom:12px">
             <label data-i18n="quotePage.email">Email</label>
-            <input type="email" name="email" required />
+            <input type="email" name="email" autocomplete="email" required />
           </div>
           <div class="field" style="margin-bottom:12px">
             <label data-i18n="quotePage.phone">Phone</label>
-            <input name="phone" required />
+            <input name="phone" type="tel" autocomplete="tel" required />
           </div>
           <div class="field" style="margin-bottom:16px">
             <label data-i18n="quotePage.notes">Notes</label>
             <textarea name="notes" rows="3" data-i18n="quotePage.notesPh"></textarea>
           </div>
-          <div style="display:flex;gap:10px;justify-content:flex-end">
+          <div class="quote-actions">
             <button type="button" class="btn btn-ghost" id="back-3" data-i18n="quotePage.back">Back</button>
             <button type="button" class="btn btn-ember" id="to-step-5" data-i18n="quotePage.continue">Continue</button>
           </div>
         </div>
 
         <div data-qpanel="5" hidden>
-          <p data-i18n="quotePage.payLede" style="margin:0 0 8px;color:var(--muted)"></p>
-          <div class="pay-methods" role="radiogroup" aria-label="Payment">
+          <p data-i18n="quotePage.payLedeSafe" style="margin:0 0 8px;color:var(--muted)"></p>
+          <div class="pay-methods" role="radiogroup" aria-label="Payment preference">
             <label class="pay-option">
               <input type="radio" name="pay" value="mercadopago" checked />
               <div>
@@ -132,14 +132,14 @@
               <span class="pay-badge" data-i18n="quotePage.payStripeBadge">Intl</span>
             </label>
           </div>
-          <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+          <div class="quote-actions">
             <button type="button" class="btn btn-ghost" id="back-4" data-i18n="quotePage.back">Back</button>
-            <button type="submit" class="btn btn-ember" data-i18n="quotePage.payCta">Confirm &amp; pay</button>
+            <button type="submit" class="btn btn-ember" data-i18n="quotePage.payCtaSafe">Send quote on WhatsApp</button>
           </div>
         </div>
       </form>
 
-      <aside class="quote-panel" id="quote-aside">
+      <aside class="quote-panel quote-aside" id="quote-aside">
         <h3 style="margin-top:0" data-i18n="quotePage.summary">Summary</h3>
         <div class="summary-box" id="quote-summary"></div>
         <div class="integrations" style="margin-top:14px">
@@ -148,6 +148,14 @@
           <span class="int-pill">Jedeye / AnyRent</span>
         </div>
       </aside>
+    </div>
+
+    <div class="quote-sticky" id="quote-sticky" hidden>
+      <div class="quote-sticky-sum">
+        <span data-i18n="quotePage.lineTotal">Total</span>
+        <strong id="quote-sticky-total">—</strong>
+      </div>
+      <button type="button" class="btn btn-ember" id="quote-sticky-cta">Continue</button>
     </div>
 
     <div class="card" id="success" hidden style="margin-top:24px">

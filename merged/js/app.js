@@ -782,6 +782,7 @@
     }
 
     let step = 1;
+    let maxReached = 1;
     /** @type {null | { groups: any[], query: any, fetchedAt: number, tripKey: string }} */
     let bffQuote = null;
     let bffError = "";
@@ -789,6 +790,10 @@
 
     const panels = [...document.querySelectorAll("[data-qpanel]")];
     const pills = [...document.querySelectorAll("[data-qstep]")];
+    const errBox = document.getElementById("quote-error");
+    const sticky = document.getElementById("quote-sticky");
+    const stickyTotal = document.getElementById("quote-sticky-total");
+    const stickyCta = document.getElementById("quote-sticky-cta");
 
     function useBff() {
       return window.READY_JEDEYE?.engineMode() === "bff" && window.READY_BFF;
@@ -809,7 +814,8 @@
         const p = stored.insurancePlan || (stored.premium ? "premium" : "cdw");
         return p === "total" || p === "premium" ? p : "cdw";
       }
-      return stored.premium ? "premium" : "cdw";
+      const p = stored.insurancePlan || (stored.premium ? "premium" : "cdw");
+      return p === "premium" ? "premium" : "cdw";
     }
 
     function insuranceQuote(plan, days, live) {
@@ -842,17 +848,71 @@
       return [t.pickup, t.dropoff, t.from, t.until, t.oneway ? "1" : "0"].join("|");
     }
 
+    function setError(msg) {
+      if (!errBox) return;
+      if (!msg) {
+        errBox.hidden = true;
+        errBox.textContent = "";
+        return;
+      }
+      errBox.hidden = false;
+      errBox.textContent = msg;
+    }
+
+    function datesOk() {
+      const a = new Date(from.value).getTime();
+      const b = new Date(until.value).getTime();
+      return !Number.isNaN(a) && !Number.isNaN(b) && b > a;
+    }
+
+    function updateStepChrome() {
+      pills.forEach((p) => {
+        const n = Number(p.dataset.qstep);
+        p.classList.toggle("is-active", n === step);
+        p.classList.toggle("is-done", n < step);
+        p.disabled = n > maxReached;
+        p.setAttribute("aria-current", n === step ? "step" : "false");
+      });
+      const step3 = document.getElementById("q-step3-label");
+      if (step3) {
+        step3.textContent = useCoverMatrix() ? q.step3Cover || q.step3 : q.step3;
+      }
+      if (sticky && stickyCta) {
+        sticky.hidden = false;
+        const labels = {
+          1: q.stickyVehicles || q.showCars,
+          2: q.stickyContinue || q.continue,
+          3: q.stickyContinue || q.continue,
+          4: q.stickyContinue || q.continue,
+          5: q.stickyWhatsApp || q.payCtaSafe,
+        };
+        stickyCta.textContent = labels[step] || q.continue;
+      }
+    }
+
+    function goNext() {
+      if (step === 1) document.getElementById("to-step-2")?.click();
+      else if (step === 2) document.getElementById("to-step-3")?.click();
+      else if (step === 3) document.getElementById("to-step-4")?.click();
+      else if (step === 4) document.getElementById("to-step-5")?.click();
+      else if (step === 5) form.requestSubmit();
+    }
+
     function show(n) {
       step = n;
+      maxReached = Math.max(maxReached, n);
       panels.forEach((p) => {
         p.hidden = Number(p.dataset.qpanel) !== n;
       });
-      pills.forEach((p) => p.classList.toggle("is-active", Number(p.dataset.qstep) === n));
+      updateStepChrome();
       if (n === 3) {
         renderCoverMatrix();
+        renderCoverSimple();
         renderExtras();
       }
       renderSummary();
+      setError("");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     const form = document.getElementById("quote-form");
@@ -863,7 +923,6 @@
     const until = form.querySelector('[name="until"]');
     const winter = form.querySelector('[name="winter"]');
     const wantChild = form.querySelector('[name="wantChild"]');
-    const premium = form.querySelector('[name="premium"]');
     const dropWrap = form.querySelector("[data-drop-wrap]");
 
     pickup.innerHTML = stationOptions(trip.pickup || "brc");
@@ -877,15 +936,20 @@
         Boolean(trip.wantChild) ||
         Boolean(trip.extras?.child || trip.extras?.infant || trip.extras?.booster);
     }
-    if (trip.premium) premium.checked = true;
-    const simplePremium = form.querySelector("[data-premium-simple]");
-    if (simplePremium) simplePremium.hidden = useCoverMatrix();
-    if (useCoverMatrix() && !TRIP.load().insurancePlan) {
+    if (!TRIP.load().insurancePlan) {
       TRIP.save({
         insurancePlan: trip.premium ? "premium" : "cdw",
         premium: Boolean(trip.premium),
       });
     }
+    const nameInput = form.querySelector('[name="name"]');
+    const emailInput = form.querySelector('[name="email"]');
+    const phoneInput = form.querySelector('[name="phone"]');
+    const notesInput = form.querySelector('[name="notes"]');
+    if (nameInput && trip.name) nameInput.value = trip.name;
+    if (emailInput && trip.email) emailInput.value = trip.email;
+    if (phoneInput && trip.phone) phoneInput.value = trip.phone;
+    if (notesInput && trip.notes) notesInput.value = trip.notes;
     dropWrap.hidden = !oneway.checked;
 
     form.querySelector("#q-step1-label").textContent = q.step1;
@@ -908,11 +972,78 @@
     const payCta = form.querySelector('[type="submit"]');
     if (payCta) payCta.textContent = q.payCtaSafe || q.payCta;
 
+    pills.forEach((p) => {
+      p.addEventListener("click", () => {
+        const n = Number(p.dataset.qstep);
+        if (n <= maxReached) show(n);
+      });
+    });
+    stickyCta?.addEventListener("click", goNext);
+
     oneway.addEventListener("change", () => {
       dropWrap.hidden = !oneway.checked;
       renderSummary();
     });
     form.addEventListener("change", renderSummary);
+
+    document.getElementById("to-step-2")?.addEventListener("click", async () => {
+      if (!datesOk()) {
+        setError(q.dateError || "Return must be after pick-up.");
+        return;
+      }
+      setError("");
+      const payload = readTrip();
+      if (payload.winter || payload.wantChild) {
+        payload.extras = seedExtrasFromFlags({ ...TRIP.load(), ...payload });
+      }
+      TRIP.save(payload);
+      await loadBffQuote(true);
+      if (useBff() && bffQuote?.groups?.[0]) {
+        const sample = window.READY_BFF.pricingFromGroup(bffQuote.groups[0]);
+        DATA.extras.forEach((ex) => {
+          if (!ex.liveCode) return;
+          const p = window.READY_BFF.extraUnitPrice(sample.extras, ex.liveCode);
+          if (p != null) ex.amount = p;
+        });
+        const pcdw = window.READY_BFF.insuranceDaily(sample.insurances, "PCDW");
+        if (pcdw) DATA.premiumDaily = pcdw.daily;
+        const total = window.READY_BFF.insuranceDaily(sample.insurances, "SEGURO TOTAL");
+        if (total) DATA.totalDaily = total.daily;
+      }
+      renderCars();
+      show(2);
+    });
+    document.getElementById("back-1")?.addEventListener("click", () => show(1));
+    document.getElementById("to-step-3")?.addEventListener("click", () => {
+      if (!TRIP.load().carId) {
+        setError(q.pickCar || "Select a vehicle");
+        return;
+      }
+      setError("");
+      show(3);
+    });
+    document.getElementById("back-2")?.addEventListener("click", () => show(2));
+    document.getElementById("to-step-4")?.addEventListener("click", () => {
+      TRIP.save({ extras: readExtrasFromUi() });
+      show(4);
+    });
+    document.getElementById("back-3")?.addEventListener("click", () => show(3));
+    document.getElementById("to-step-5")?.addEventListener("click", () => {
+      const name = form.querySelector('[name="name"]');
+      const email = form.querySelector('[name="email"]');
+      const phone = form.querySelector('[name="phone"]');
+      if (!name.reportValidity() || !email.reportValidity() || !phone.reportValidity()) return;
+      TRIP.save({
+        ...readTrip(),
+        extras: TRIP.load().extras || {},
+        name: name.value.trim(),
+        email: email.value.trim(),
+        phone: phone.value.trim(),
+        notes: form.querySelector('[name="notes"]').value.trim(),
+      });
+      show(5);
+    });
+    document.getElementById("back-4")?.addEventListener("click", () => show(4));
 
     async function loadBffQuote(force = false) {
       if (!useBff()) {
@@ -948,65 +1079,9 @@
       return window.READY_BFF.pricingFromGroup(g);
     }
 
-    document.getElementById("to-step-2")?.addEventListener("click", async () => {
-      const payload = readTrip();
-      if (payload.winter || payload.wantChild) {
-        payload.extras = seedExtrasFromFlags({ ...TRIP.load(), ...payload });
-      }
-      TRIP.save(payload);
-      await loadBffQuote(true);
-      if (useBff() && bffQuote?.groups?.[0]) {
-        const sample = window.READY_BFF.pricingFromGroup(bffQuote.groups[0]);
-        DATA.extras.forEach((ex) => {
-          if (!ex.liveCode) return;
-          const p = window.READY_BFF.extraUnitPrice(sample.extras, ex.liveCode);
-          if (p != null) ex.amount = p;
-        });
-        const pcdw = window.READY_BFF.insuranceDaily(sample.insurances, "PCDW");
-        if (pcdw) DATA.premiumDaily = pcdw.daily;
-        const total = window.READY_BFF.insuranceDaily(sample.insurances, "SEGURO TOTAL");
-        if (total) DATA.totalDaily = total.daily;
-      }
-      renderCars();
-      show(2);
-    });
-    document.getElementById("back-1")?.addEventListener("click", () => show(1));
-    document.getElementById("to-step-3")?.addEventListener("click", () => {
-      if (!TRIP.load().carId) {
-        alert(getLang() === "es" ? "Elegí un vehículo" : getLang() === "pt" ? "Escolha um veículo" : "Select a vehicle");
-        return;
-      }
-      show(3);
-    });
-    document.getElementById("back-2")?.addEventListener("click", () => show(2));
-    document.getElementById("to-step-4")?.addEventListener("click", () => {
-      TRIP.save({ extras: readExtrasFromUi() });
-      show(4);
-    });
-    document.getElementById("skip-extras")?.addEventListener("click", () => {
-      TRIP.save({ extras: {} });
-      show(4);
-    });
-    document.getElementById("back-3")?.addEventListener("click", () => show(3));
-    document.getElementById("to-step-5")?.addEventListener("click", () => {
-      const name = form.querySelector('[name="name"]');
-      const email = form.querySelector('[name="email"]');
-      const phone = form.querySelector('[name="phone"]');
-      if (!name.reportValidity() || !email.reportValidity() || !phone.reportValidity()) return;
-      TRIP.save({
-        ...readTrip(),
-        extras: TRIP.load().extras || {},
-        name: name.value.trim(),
-        email: email.value.trim(),
-        phone: phone.value.trim(),
-        notes: form.querySelector('[name="notes"]').value.trim(),
-      });
-      show(5);
-    });
-    document.getElementById("back-4")?.addEventListener("click", () => show(4));
-
     function readTrip() {
       const isOne = oneway.checked;
+      const plan = resolveInsurancePlan(TRIP.load());
       return {
         pickup: pickup.value,
         dropoff: isOne ? dropoff.value : pickup.value,
@@ -1015,30 +1090,12 @@
         until: until.value,
         winter: winter.checked,
         wantChild: Boolean(wantChild?.checked),
-        premium: useCoverMatrix()
-          ? resolveInsurancePlan(TRIP.load()) === "premium"
-          : premium.checked,
-        insurancePlan: useCoverMatrix()
-          ? resolveInsurancePlan(TRIP.load())
-          : premium.checked
-            ? "premium"
-            : "cdw",
+        premium: plan === "premium",
+        insurancePlan: plan,
         onewayFee: isOne ? onewayFee(pickup.value, dropoff.value) : 0,
         age21: true,
         pay: form.querySelector('input[name="pay"]:checked')?.value || "mercadopago",
       };
-    }
-
-    function readExtrasFromUi() {
-      const box = document.getElementById("quote-extras");
-      if (!box) return normalizeExtras(TRIP.load().extras);
-      const map = {};
-      box.querySelectorAll("[data-extra-id]").forEach((sel) => {
-        const id = sel.dataset.extraId;
-        const qty = Number(sel.value) || 0;
-        if (qty > 0) map[id] = qty;
-      });
-      return normalizeExtras(map);
     }
 
     function extrasCostLive(extrasMap, days, live) {
@@ -1130,11 +1187,79 @@
             insurancePlan: next,
             premium: next === "premium",
           });
-          if (premium) premium.checked = next === "premium";
           renderCoverMatrix();
+          renderCoverSimple();
           renderSummary();
         });
       });
+    }
+
+    function renderCoverSimple() {
+      const box = document.getElementById("cover-simple");
+      if (!box) return;
+      if (useCoverMatrix()) {
+        box.hidden = true;
+        box.innerHTML = "";
+        return;
+      }
+      box.hidden = false;
+      const plan = resolveInsurancePlan(TRIP.load());
+      const days = daysBetween(from.value, until.value);
+      const live = liveForCar(TRIP.load().carId);
+      const basic = insuranceQuote("cdw", days, live);
+      const premiumQ = insuranceQuote("premium", days, live);
+      box.innerHTML = `
+        <div class="cover-head">
+          <h3>${q.coverSimpleTitle || "Coverage"}</h3>
+          <p>${q.coverSimpleLede || ""}</p>
+        </div>
+        <div class="cover-simple-grid" role="radiogroup">
+          <label class="cover-card ${plan === "cdw" ? "is-selected" : ""}">
+            <input type="radio" name="insurancePlanSimple" value="cdw" ${plan === "cdw" ? "checked" : ""} />
+            <div class="cover-card-top">
+              <strong>${q.coverPlanCdw}</strong>
+              <span class="cover-hint">${q.coverPlanCdwHint}</span>
+              <div class="cover-price">${q.coverIncluded}</div>
+            </div>
+            <div class="cover-money">
+              <div><span>${q.coverExcess}</span><strong>${basic.excess != null ? money(basic.excess) : "—"}</strong></div>
+              <div><span>${q.coverDeposit}</span><strong>${basic.deposit != null ? money(basic.deposit) : "—"}</strong></div>
+            </div>
+          </label>
+          <label class="cover-card ${plan === "premium" ? "is-selected" : ""}">
+            <input type="radio" name="insurancePlanSimple" value="premium" ${plan === "premium" ? "checked" : ""} />
+            <div class="cover-card-top">
+              <strong>${q.coverPlanPremium}</strong>
+              <span class="cover-hint">${q.coverPlanPremiumHint}</span>
+              <div class="cover-price">${premiumQ.daily > 0 ? `${money(premiumQ.daily)}${q.coverPerDay}` : q.coverIncluded}</div>
+            </div>
+            <div class="cover-money">
+              <div><span>${q.coverExcess}</span><strong>${premiumQ.excess != null ? money(premiumQ.excess) : "—"}</strong></div>
+              <div><span>${q.coverDeposit}</span><strong>${premiumQ.deposit != null ? money(premiumQ.deposit) : "—"}</strong></div>
+            </div>
+          </label>
+        </div>
+      `;
+      box.querySelectorAll('input[name="insurancePlanSimple"]').forEach((input) => {
+        input.addEventListener("change", () => {
+          TRIP.save({ insurancePlan: input.value, premium: input.value === "premium" });
+          renderCoverSimple();
+          renderSummary();
+        });
+      });
+    }
+
+    function persistExtras(map) {
+      TRIP.save({
+        extras: map,
+        winter: Boolean(map.chains) || winter.checked,
+        wantChild: Boolean(map.child || map.infant || map.booster) || Boolean(wantChild?.checked),
+      });
+      if (map.chains) winter.checked = true;
+      if (map.child || map.infant || map.booster) {
+        if (wantChild) wantChild.checked = true;
+      }
+      renderSummary();
     }
 
     function renderExtras() {
@@ -1152,47 +1277,74 @@
             const p = window.READY_BFF.extraUnitPrice(live.extras, ex.liveCode);
             if (p != null) unit = p;
           }
-          const opts = Array.from({ length: ex.maxQty + 1 }, (_, i) => {
-            return `<option value="${i}" ${i === qty ? "selected" : ""}>${i}</option>`;
-          }).join("");
+          const price = `${money(unit)}${ex.pricing === "once" ? "" : exDict.perDay}`;
+          const title = `${copy.name}${ex.seasonal ? ` · ${exDict.seasonal}` : ""}`;
+          if (ex.maxQty <= 1) {
+            const on = qty > 0;
+            return `
+              <button type="button" class="extra-row extra-toggle ${on ? "is-on" : ""}" data-extra-toggle="${ex.id}" aria-pressed="${on}">
+                <div class="extra-icon" aria-hidden="true">${ex.icon}</div>
+                <div class="extra-copy">
+                  <h4>${title}</h4>
+                  <p>${copy.desc} · ${price}</p>
+                </div>
+                <span class="extra-toggle-state">${on ? q.added || "Added" : q.add || "Add"}</span>
+              </button>`;
+          }
           return `
             <div class="extra-row ${qty ? "is-on" : ""}" data-extra-row="${ex.id}">
               <div class="extra-icon" aria-hidden="true">${ex.icon}</div>
-              <div>
-                <h4>${copy.name}${ex.seasonal ? ` · ${exDict.seasonal}` : ""}</h4>
-                <p>${copy.desc} · ${money(unit)}${ex.pricing === "once" ? "" : exDict.perDay}</p>
+              <div class="extra-copy">
+                <h4>${title}</h4>
+                <p>${copy.desc} · ${price}</p>
               </div>
-              <div class="extra-qty">
-                <label for="extra-${ex.id}">${exDict.qty}</label>
-                <select id="extra-${ex.id}" data-extra-id="${ex.id}">${opts}</select>
+              <div class="qty-stepper" data-extra-stepper="${ex.id}">
+                <button type="button" class="qty-btn" data-extra-dec aria-label="${q.qtyLess || "Less"}">−</button>
+                <span class="qty-val" data-extra-id="${ex.id}" data-qty="${qty}" aria-live="polite">${qty}</span>
+                <button type="button" class="qty-btn" data-extra-inc aria-label="${q.qtyMore || "More"}" data-max="${ex.maxQty}">+</button>
               </div>
             </div>`;
         })
         .join("");
-      list.querySelectorAll("[data-extra-id]").forEach((sel) => {
-        sel.addEventListener("change", () => {
-          const map = readExtrasFromUi();
-          TRIP.save({
-            extras: map,
-            winter: Boolean(map.chains) || winter.checked,
-            wantChild: Boolean(map.child || map.infant || map.booster) || Boolean(wantChild?.checked),
-          });
-          if (map.chains) winter.checked = true;
-          if (map.child || map.infant || map.booster) {
-            if (wantChild) wantChild.checked = true;
-          }
-          list.querySelectorAll("[data-extra-row]").forEach((row) => {
-            const id = row.dataset.extraRow;
-            row.classList.toggle("is-on", Boolean(map[id]));
-          });
-          renderSummary();
+
+      list.querySelectorAll("[data-extra-toggle]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.dataset.extraToggle;
+          const map = { ...normalizeExtras(TRIP.load().extras) };
+          map[id] = map[id] ? 0 : 1;
+          if (!map[id]) delete map[id];
+          persistExtras(normalizeExtras(map));
+          renderExtras();
+        });
+      });
+      list.querySelectorAll("[data-extra-stepper]").forEach((wrap) => {
+        const id = wrap.dataset.extraStepper;
+        const valEl = wrap.querySelector("[data-extra-id]");
+        const max = Number(wrap.querySelector("[data-extra-inc]")?.dataset.max) || 1;
+        const setQty = (next) => {
+          const map = { ...normalizeExtras(TRIP.load().extras) };
+          const qn = Math.max(0, Math.min(max, next));
+          if (qn) map[id] = qn;
+          else delete map[id];
+          persistExtras(normalizeExtras(map));
+          renderExtras();
+        };
+        wrap.querySelector("[data-extra-dec]")?.addEventListener("click", () => {
+          setQty((Number(valEl?.dataset.qty) || 0) - 1);
+        });
+        wrap.querySelector("[data-extra-inc]")?.addEventListener("click", () => {
+          setQty((Number(valEl?.dataset.qty) || 0) + 1);
         });
       });
     }
 
+    function readExtrasFromUi() {
+      return normalizeExtras(TRIP.load().extras);
+    }
+
     function renderCars() {
       const list = document.getElementById("quote-cars");
-      const selected = TRIP.load().carId;
+      let selected = TRIP.load().carId;
       const days = daysBetween(from.value, until.value);
       if (bffLoading) {
         list.innerHTML = `<p style="color:var(--muted)">${q.bffLoading || "Loading live rates…"}</p>`;
@@ -1207,6 +1359,10 @@
         return Boolean(liveForCar(c.id));
       });
       const source = cars.length ? cars : DATA.cars;
+      if (!selected && source[0]) {
+        selected = source[0].id;
+        TRIP.save({ carId: selected });
+      }
       if (useBff() && bffQuote?.groups?.length) {
         prefix += `<p style="margin:0 0 10px;font-size:.82rem;color:var(--muted)">${q.bffBadge || "Live AnyRent rates via BFF (read-only)"}</p>`;
       }
@@ -1219,17 +1375,19 @@
             const rental = live ? live.totalAfterTax : c.daily * days;
             const status = live?.status && live.status !== "AVAILABLE" ? ` · ${live.status}` : "";
             const img = live?.imageUrl || carImg(c);
+            const isSel = selected === c.id;
             return `
-            <label class="result-row" style="cursor:pointer">
+            <label class="result-row car-option ${isSel ? "is-selected" : ""}">
               <div class="thumb fleet-photo" style="background-image:url('${img}')"></div>
               <div>
                 <h3 style="margin:0">${label.name}${c.isNew ? ' <span class="badge-new">NEW</span>' : ""}</h3>
                 <p class="meta" style="margin:4px 0;color:var(--muted)">${live ? `${live.brand || ""} ${live.model || ""}`.trim() || label.similar : label.similar}</p>
                 <p style="margin:0;font-size:.88rem;color:var(--muted)">${label.tags} · ${days}d${status}</p>
               </div>
-              <div style="text-align:right">
+              <div class="car-option-price">
                 <strong>${money(rental)}</strong>
-                <div><input type="radio" name="carId" value="${c.id}" ${selected === c.id ? "checked" : ""} /></div>
+                <span class="car-pick">${isSel ? "✓" : ""}</span>
+                <input type="radio" name="carId" value="${c.id}" ${isSel ? "checked" : ""} />
               </div>
             </label>`;
           })
@@ -1237,6 +1395,8 @@
       list.querySelectorAll('input[name="carId"]').forEach((input) => {
         input.addEventListener("change", () => {
           TRIP.save({ carId: input.value });
+          setError("");
+          renderCars();
           renderSummary();
         });
       });
@@ -1279,9 +1439,7 @@
       const box = document.getElementById("quote-summary");
       const st = dict.stations;
       const payLabel = cur.pay === "stripe" ? q.payStripe : q.payMp;
-      const coverLineLabel = useCoverMatrix()
-        ? `${q.lineCoverage || "Coverage"} (${planLabel(plan)})`
-        : q.linePremium;
+      const coverLineLabel = `${q.lineCoverage || q.linePremium || "Coverage"} (${planLabel(plan)})`;
       const extrasHtml = extrasLines.length
         ? `<ul class="summary-extras">${extrasLines
             .map((l) => `<li><span>${l.name}${l.qty > 1 ? ` ×${l.qty}` : ""}</span><span>${money(l.amount)}</span></li>`)
@@ -1290,7 +1448,7 @@
       const sourceNote = usingLive
         ? q.bffNote || "Live rates via BFF · no booking created · payment not connected yet"
         : q.demoNote;
-      const showDep = (useCoverMatrix() || usingLive) && (deposit != null || excess != null);
+      const showDep = (useCoverMatrix() || usingLive || plan !== "cdw") && (deposit != null || excess != null);
       const depHtml = showDep
           ? `<div><dt>${q.lineDeposit || "Deposit"}</dt><dd>${money(deposit || 0)}</dd></div>
              <div><dt>${q.lineExcess || "Excess"}</dt><dd>${money(excess || 0)}</dd></div>`
@@ -1322,6 +1480,7 @@
         <p style="margin:6px 0 0;font-size:.82rem;color:var(--muted)">${q.mpNote}</p>
         ${handoff}
       `;
+      if (stickyTotal) stickyTotal.textContent = money(total);
       document.getElementById("live-handoff-btn")?.addEventListener("click", () => {
         if (!window.READY_JEDEYE) return;
         try {
@@ -1372,6 +1531,7 @@
       wa.href = `https://wa.me/${DATA.whatsapp}?text=${msg}`;
       form.hidden = true;
       document.getElementById("quote-aside").hidden = true;
+      if (sticky) sticky.hidden = true;
     });
 
     show(1);
