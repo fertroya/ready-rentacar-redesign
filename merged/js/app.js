@@ -918,9 +918,8 @@
       }
       renderSummary();
       setError("");
-      const body = document.querySelector(".quote-body");
-      if (body) body.scrollIntoView({ behavior: "smooth", block: "start" });
-      else window.scrollTo({ top: 0, behavior: "smooth" });
+      // Keep stage + sticky site header in view (don't jump into the panel)
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     const form = document.getElementById("quote-form");
