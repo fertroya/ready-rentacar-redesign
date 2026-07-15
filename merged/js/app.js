@@ -851,7 +851,22 @@
       return !Number.isNaN(a) && !Number.isNaN(b) && b > a;
     }
 
-    function updateStepChrome() {
+    function syncStageMedia() {
+      const media = stage?.querySelector(".quote-stage-media");
+      if (!media) return;
+      const carId = TRIP.load().carId;
+      const car = DATA.cars.find((c) => c.id === carId);
+      const live = carId ? liveForCar(carId) : null;
+      const img = step === 2 && car ? live?.imageUrl || carImg(car) : "";
+      if (img) {
+        media.style.backgroundImage = `url("${img}")`;
+        media.classList.add("is-fleet-hero");
+      } else {
+        media.style.backgroundImage = "";
+        media.classList.remove("is-fleet-hero");
+      }
+    }
+
       pills.forEach((p) => {
         const n = Number(p.dataset.qstep);
         p.classList.toggle("is-active", n === step);
@@ -894,6 +909,7 @@
         };
         stickyCta.textContent = labels[step] || q.continue;
       }
+      syncStageMedia();
     }
 
     function goNext() {
@@ -1396,8 +1412,10 @@
           setError("");
           renderCars();
           renderSummary();
+          syncStageMedia();
         });
       });
+      syncStageMedia();
     }
 
     function renderSummary() {
