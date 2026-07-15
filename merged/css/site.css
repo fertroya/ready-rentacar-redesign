@@ -739,7 +739,6 @@ h3 { font-size: 1.25rem; margin: 0 0 8px; }
 @media (max-width: 960px) {
   .cover-simple-grid { grid-template-columns: 1fr; }
 }
-.step-pill.is-active { background: var(--lake); color: #fff; }
 .summary-box {
   background: linear-gradient(180deg, #eef3f1, #e2ebe7);
   border-radius: var(--radius);
