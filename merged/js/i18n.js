@@ -1,13 +1,6 @@
 window.READY_I18N = {
   en: {
     langName: "EN",
-    theme: {
-      label: "Color theme",
-      patagonia: "Patagonia expedition",
-      corporate: "Corporate fleet",
-      slate: "Noir editorial",
-      short: { patagonia: "Expe", corporate: "Corp", slate: "Noir" },
-    },
     nav: {
       fleet: "Fleet",
       stations: "Stations",
@@ -275,7 +268,7 @@ window.READY_I18N = {
         { q: "Can I pick up in Bariloche and return elsewhere in Argentina?", a: "Yes. One-way flexibility is a Ready strength — start in hubs like Bariloche or Calafate and return at another point. Fees appear in your online quote." },
         { q: "Do you help plan the route?", a: "Yes. We personalize itineraries for foreign travelers (e.g. Bariloche–Calafate) and match SUV/pickup to the road." },
         { q: "What about roadside assistance?", a: "Ops WhatsApp support plus Premium insurance options that add mechanical assistance and reduce excess (promo terms)." },
-        { q: "Can I reserve snow chains?", a: "Yes. Add snow chains in Extras (especially for BRC/CPC in ski season). You can flag interest on the home search too." },
+        { q: "Can I reserve snow chains?", a: "Yes. Add snow chains in the Extras step of the quote (especially for BRC/CPC in ski season)." },
         { q: "Do you have child / infant seats?", a: "Yes — infant and child seats are in the catalog. Choose quantity in the Extras step of the quote." },
         { q: "How do Mercado Pago installments work?", a: "Selected Premium insurance promotions allow paying the reservation in 6 cuotas sin interés. Confirmed on quote." },
         { q: "Languages?", a: "Site and team support English, Spanish, and Portuguese." },
@@ -302,13 +295,6 @@ window.READY_I18N = {
   },
   es: {
     langName: "ES",
-    theme: {
-      label: "Tema de color",
-      patagonia: "Expedición Patagonia",
-      corporate: "Flota corporativa",
-      slate: "Noir editorial",
-      short: { patagonia: "Expe", corporate: "Corp", slate: "Noir" },
-    },
     nav: {
       fleet: "Flota",
       stations: "Estaciones",
@@ -577,7 +563,7 @@ window.READY_I18N = {
         { q: "¿Puedo retirar en Bariloche y devolver en otro punto del país?", a: "Sí. La flexibilidad one-way es un fuerte de Ready — hubs como Bariloche o Calafate y devolución en otro punto. Los cargos aparecen en la cotización online." },
         { q: "¿Ayudan a armar la ruta?", a: "Sí. Personalizamos itinerarios para viajeros extranjeros (ej. Bariloche–Calafate) y elegimos SUV/pickup según el camino." },
         { q: "¿Qué pasa con la asistencia vial?", a: "Soporte por WhatsApp operativo y opciones Premium con auxilio mecánico y menor franquicia (según promo)." },
-        { q: "¿Puedo reservar cadenas para nieve?", a: "Sí. Agregalas en Accesorios (sobre todo BRC/CPC en temporada de ski). También podés marcarlo en la búsqueda del home." },
+        { q: "¿Puedo reservar cadenas para nieve?", a: "Sí. Agregalas en Accesorios en la cotización (sobre todo BRC/CPC en temporada de ski)." },
         { q: "¿Tienen sillas de bebé / niño?", a: "Sí — silla bebé y silla niño están en el catálogo. Elegí cantidad en el paso Accesorios de la cotización." },
         { q: "¿Cómo funcionan las cuotas de Mercado Pago?", a: "Promos de seguro Premium permiten pagar la reserva en 6 cuotas sin interés. Se confirma en la cotización." },
         { q: "¿Idiomas?", a: "Sitio y equipo en inglés, español y portugués." },
@@ -604,13 +590,6 @@ window.READY_I18N = {
   },
   pt: {
     langName: "PT",
-    theme: {
-      label: "Tema de cor",
-      patagonia: "Expedição Patagônia",
-      corporate: "Frota corporativa",
-      slate: "Noir editorial",
-      short: { patagonia: "Expe", corporate: "Corp", slate: "Noir" },
-    },
     nav: {
       fleet: "Frota",
       stations: "Estações",
@@ -879,7 +858,7 @@ window.READY_I18N = {
         { q: "Posso retirar em Bariloche e devolver em outro ponto do país?", a: "Sim. A flexibilidade one-way é um diferencial Ready — hubs como Bariloche ou Calafate e devolução em outro ponto. Taxas aparecem na cotação online." },
         { q: "Ajudam a montar a rota?", a: "Sim. Personalizamos itinerários para viajantes estrangeiros (ex. Bariloche–Calafate) e escolhemos SUV/pickup conforme a estrada." },
         { q: "E a assistência na estrada?", a: "Suporte WhatsApp operacional e opções Premium com assistência mecânica e menor franquia (conforme promo)." },
-        { q: "Posso reservar correntes de neve?", a: "Sim. Adicione em Extras (especialmente BRC/CPC na temporada de ski). Também pode marcar na busca da home." },
+        { q: "Posso reservar correntes de neve?", a: "Sim. Adicione em Extras na cotação (especialmente BRC/CPC na temporada de ski)." },
         { q: "Tem cadeirinha / bebê conforto?", a: "Sim — bebê conforto e cadeirinha estão no catálogo. Escolha a quantidade no passo Extras da cotação." },
         { q: "Como funcionam as parcelas Mercado Pago?", a: "Promos de seguro Premium permitem pagar a reserva em 6 parcelas sem juros. Confirmado na cotação." },
         { q: "Idiomas?", a: "Site e equipe em inglês, espanhol e português." },

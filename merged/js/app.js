@@ -17,36 +17,11 @@
   const BASE = detectBase();
   DATA.basePath = BASE;
 
-  const THEMES = ["patagonia", "corporate", "slate"];
-
-  function getTheme() {
-    const url = new URL(window.location.href);
-    const q = url.searchParams.get("theme");
-    if (q && THEMES.includes(q)) {
-      localStorage.setItem("ready_theme", q);
-      return q;
-    }
-    const stored = localStorage.getItem("ready_theme");
-    return THEMES.includes(stored) ? stored : "patagonia";
-  }
-
-  function setTheme(theme, { reload = false } = {}) {
-    if (!THEMES.includes(theme)) theme = "patagonia";
-    localStorage.setItem("ready_theme", theme);
-    document.documentElement.setAttribute("data-theme", theme);
-    const url = new URL(window.location.href);
-    url.searchParams.set("theme", theme);
-    if (reload) {
-      window.location.href = url.toString();
-      return;
-    }
-    window.history.replaceState({}, "", url);
-    document.querySelectorAll("[data-theme-opt]").forEach((btn) => {
-      btn.classList.toggle("is-active", btn.dataset.themeOpt === theme);
-    });
-  }
-
-  setTheme(getTheme());
+  // Clear any leftover theme experiments from localStorage
+  try {
+    localStorage.removeItem("ready_theme");
+    document.documentElement.removeAttribute("data-theme");
+  } catch (_) {}
 
   function getLang() {
     const url = new URL(location.href);
@@ -62,7 +37,7 @@
     localStorage.setItem("ready_lang", lang);
     const url = new URL(location.href);
     url.searchParams.set("lang", lang);
-    url.searchParams.set("theme", getTheme());
+    url.searchParams.delete("theme");
     history.replaceState({}, "", url);
     applyI18n();
   }
@@ -77,7 +52,6 @@
 
   function href(page) {
     const lang = getLang();
-    const theme = getTheme();
     const map = {
       home: "index.html",
       fleet: "fleet.html",
@@ -91,7 +65,7 @@
       faqs: "faqs.html",
       contact: "contact.html",
     };
-    return `${BASE}${map[page] || "index.html"}?lang=${lang}&theme=${theme}`;
+    return `${BASE}${map[page] || "index.html"}?lang=${lang}`;
   }
 
   function extraCopy(id) {
@@ -212,12 +186,6 @@
           .join("")}
       </nav>
       <div class="nav-actions">
-        <div class="theme-switch" role="group" aria-label="${dict.theme?.label || "Theme"}">
-          ${THEMES.map((th) => {
-            const label = dict.theme?.[th] || th;
-            return `<button type="button" data-theme-opt="${th}" class="${getTheme() === th ? "is-active" : ""}" title="${label}" aria-label="${label}"><span class="theme-dot" aria-hidden="true"></span>${dict.theme?.short?.[th] || th}</button>`;
-          }).join("")}
-        </div>
         <div class="lang-switch" role="group" aria-label="Language">
           ${["en", "es", "pt"]
             .map(
@@ -233,9 +201,6 @@
     `;
     el.querySelectorAll("[data-lang]").forEach((btn) => {
       btn.addEventListener("click", () => setLang(btn.dataset.lang));
-    });
-    el.querySelectorAll("[data-theme-opt]").forEach((btn) => {
-      btn.addEventListener("click", () => setTheme(btn.dataset.themeOpt));
     });
     const toggle = el.querySelector("#menu-toggle");
     const nav = el.querySelector("#nav-links");
@@ -303,8 +268,6 @@
     const oneway = document.getElementById("oneway") || form.querySelector('[name="oneway"]');
     const from = form.querySelector('[name="from"]');
     const until = form.querySelector('[name="until"]');
-    const winter = document.getElementById("winter") || form.querySelector('[name="winter"]');
-    const wantChild = document.getElementById("wantChild") || form.querySelector('[name="wantChild"]');
     const feeBox = document.querySelector("[data-oneway-fee]");
     const winterBox = document.querySelector("[data-winter-banner]");
 
@@ -323,8 +286,6 @@
     if (dropWrap) dropWrap.classList.add("is-on");
     form.classList.add("has-drop");
     if (oneway) oneway.checked = Boolean(trip.oneway) || defaultPickup !== defaultDrop;
-    if (winter) winter.checked = Boolean(trip.winter) || isWinterSeason(defaultFrom);
-    if (wantChild) wantChild.checked = Boolean(trip.wantChild) || Boolean(trip.extras?.child || trip.extras?.infant);
 
     let syncingStations = false;
 
@@ -340,9 +301,7 @@
         feeBox.textContent = isOne && fee ? `${dict.feeLabel}: ${money(fee)}` : "";
       }
       if (winterBox) {
-        const show =
-          winter?.checked ||
-          ((p === "brc" || p === "cpc") && isWinterSeason(from?.value));
+        const show = (p === "brc" || p === "cpc") && isWinterSeason(from?.value);
         winterBox.classList.toggle("is-on", show);
         winterBox.textContent = show ? t().home.winterNoteShort || t().home.winterNote : "";
       }
@@ -368,7 +327,6 @@
       if (e.target === oneway) return;
       sync();
     });
-    winter?.addEventListener("change", sync);
     sync();
 
     form.addEventListener("submit", (e) => {
@@ -380,8 +338,6 @@
         oneway: isOne,
         from: from.value,
         until: until.value,
-        winter: Boolean(winter?.checked),
-        wantChild: Boolean(wantChild?.checked),
         age21: Boolean(document.querySelector('[name="age21"]')?.checked),
         onewayFee: isOne ? onewayFee(pickup.value, dropoff.value) : 0,
       };
@@ -522,8 +478,6 @@
       "label-until": search.until,
       "label-oneway": search.oneway,
       "label-age21": search.age21,
-      "label-winter": search.winter,
-      "label-child": search.childSeat,
       "search-submit": search.submit,
       "extras-title": dict.home.extrasTitle,
       "extras-lede": dict.home.extrasLede,
@@ -933,8 +887,6 @@
     const oneway = form.querySelector('[name="oneway"]');
     const from = form.querySelector('[name="from"]');
     const until = form.querySelector('[name="until"]');
-    const winter = form.querySelector('[name="winter"]');
-    const wantChild = form.querySelector('[name="wantChild"]');
     const dropWrap = form.querySelector("[data-drop-wrap]");
 
     pickup.innerHTML = stationOptions(trip.pickup || "brc");
@@ -942,7 +894,7 @@
     from.value = trip.from || "2026-08-01T10:00";
     until.value = trip.until || "2026-08-08T10:00";
     oneway.checked = Boolean(trip.oneway) || trip.pickup !== trip.dropoff;
-    // Prefill extras once from home search flags (winter / child) — not shown again in step 1
+    // Prefill extras once from trip flags (e.g. winter route) — not shown again in step 1
     const seeded = seedExtrasFromFlags(trip);
     if (JSON.stringify(seeded) !== JSON.stringify(normalizeExtras(trip.extras))) {
       TRIP.save({ extras: seeded });
