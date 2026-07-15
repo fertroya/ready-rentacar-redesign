@@ -82,9 +82,9 @@
     DATA.extras.forEach((ex) => {
       const qty = map[ex.id] || 0;
       if (!qty) return;
-      const line = ex.amount * days * qty;
-      total += line;
-      lines.push({ id: ex.id, qty, amount: line, name: extraCopy(ex.id).name });
+      const amount = ex.pricing === "once" ? ex.amount * qty : ex.amount * qty * days;
+      total += amount;
+      lines.push({ id: ex.id, qty, amount, name: extraCopy(ex.id).name });
     });
     return { total, lines };
   }
@@ -92,7 +92,7 @@
   function seedExtrasFromFlags(trip) {
     const extras = normalizeExtras(trip.extras);
     if (trip.winter && !extras.chains) extras.chains = 1;
-    if (trip.wantChild && !extras.child && !extras.infant && !extras.booster) extras.child = 1;
+    if (trip.wantChild && !extras.child && !extras.infant) extras.child = 1;
     return extras;
   }
 
@@ -210,15 +210,6 @@
               <div class="footer-tag">${dict.footer.tag}</div>
             </div>
           </a>
-          <div class="integrations">
-            <span class="int-pill">Jedeye / AnyRent</span>
-            <span class="int-pill">Mercado Pago</span>
-            <span class="int-pill">Stripe</span>
-            <span class="int-pill">WhatsApp</span>
-            <span class="int-pill">EN · ES · PT</span>
-            <button type="button" class="int-pill engine-toggle" id="engine-toggle" title="Demo rates vs live AnyRent handoff"></button>
-            <button type="button" class="int-pill engine-toggle" id="ff-matrix-toggle" title="Optional A: insurance matrix"></button>
-          </div>
         </div>
         <div>
           <h4>${dict.nav.quote}</h4>
@@ -232,12 +223,10 @@
           </ul>
         </div>
         <div>
-          <h4>${dict.footer.integrations}</h4>
+          <h4>${dict.footer.partners || "Partners"}</h4>
           <ul>
-            <li><a href="${DATA.engine}" target="_blank" rel="noopener">AnyRent engine</a></li>
             <li><a href="${DATA.partnerStay}" target="_blank" rel="noopener">Orillas del Gutiérrez</a></li>
             <li><a href="${DATA.facebook}" target="_blank" rel="noopener">Facebook</a></li>
-            <li><a href="${DATA.liveSite}" target="_blank" rel="noopener">Live site</a></li>
           </ul>
         </div>
         <div>
@@ -252,32 +241,6 @@
       </div>
       <p class="fineprint">${dict.footer.legal}</p>
     `;
-    const engineBtn = el.querySelector("#engine-toggle");
-    if (engineBtn && window.READY_JEDEYE) {
-      const mode = window.READY_JEDEYE.engineMode();
-      engineBtn.textContent =
-        mode === "bff" ? "Engine: BFF" : mode === "live" ? "Engine: LIVE" : "Engine: DEMO";
-      engineBtn.title =
-        mode === "bff"
-          ? "Live prices via BFF (read-only)"
-          : mode === "live"
-            ? "October handoff enabled (?engine=live)"
-            : "Local demo rates";
-      engineBtn.addEventListener("click", () => {
-        window.READY_JEDEYE.cycleEngineMode();
-        location.reload();
-      });
-    }
-    const ffBtn = el.querySelector("#ff-matrix-toggle");
-    if (ffBtn && window.READY_FLAGS) {
-      const on = window.READY_FLAGS.isEnabled("insuranceMatrix");
-      ffBtn.textContent = on ? "FF: Matrix ON" : "FF: Matrix OFF";
-      ffBtn.setAttribute("aria-pressed", String(on));
-      ffBtn.addEventListener("click", () => {
-        window.READY_FLAGS.toggle("insuranceMatrix");
-        location.reload();
-      });
-    }
   }
 
   function bindSearchForm(form) {
@@ -312,7 +275,7 @@
     form.classList.add("has-drop");
     if (oneway) oneway.checked = Boolean(trip.oneway) || defaultPickup !== defaultDrop;
     if (winter) winter.checked = Boolean(trip.winter) || isWinterSeason(defaultFrom);
-    if (wantChild) wantChild.checked = Boolean(trip.wantChild) || Boolean(trip.extras?.child || trip.extras?.infant || trip.extras?.booster);
+    if (wantChild) wantChild.checked = Boolean(trip.wantChild) || Boolean(trip.extras?.child || trip.extras?.infant);
 
     let syncingStations = false;
 
@@ -934,7 +897,7 @@
     if (wantChild) {
       wantChild.checked =
         Boolean(trip.wantChild) ||
-        Boolean(trip.extras?.child || trip.extras?.infant || trip.extras?.booster);
+        Boolean(trip.extras?.child || trip.extras?.infant);
     }
     if (!TRIP.load().insurancePlan) {
       TRIP.save({
@@ -1176,7 +1139,6 @@
         <div class="cover-head">
           <h3>${q.coverTitle || "Coverage"}</h3>
           <p>${q.coverLede || ""}</p>
-          <span class="cover-flag">${q.coverFlagNote || "Optional A"}</span>
         </div>
         <div class="cover-grid" role="radiogroup" aria-label="${q.coverTitle || "Coverage"}">${cards}</div>
       `;
@@ -1253,10 +1215,10 @@
       TRIP.save({
         extras: map,
         winter: Boolean(map.chains) || winter.checked,
-        wantChild: Boolean(map.child || map.infant || map.booster) || Boolean(wantChild?.checked),
+        wantChild: Boolean(map.child || map.infant) || Boolean(wantChild?.checked),
       });
       if (map.chains) winter.checked = true;
-      if (map.child || map.infant || map.booster) {
+      if (map.child || map.infant) {
         if (wantChild) wantChild.checked = true;
       }
       renderSummary();
@@ -1352,7 +1314,7 @@
       }
       let prefix = "";
       if (useBff() && bffError && !bffQuote?.groups?.length) {
-        prefix = `<p style="color:var(--ember)">${bffError}</p><p style="color:var(--muted)">${q.bffFallback || "Showing demo rates."}</p>`;
+        prefix = `<p style="color:var(--ember)">${bffError}</p>`;
       }
       const cars = DATA.cars.filter((c) => {
         if (!useBff() || !bffQuote?.groups?.length) return true;
@@ -1362,9 +1324,6 @@
       if (!selected && source[0]) {
         selected = source[0].id;
         TRIP.save({ carId: selected });
-      }
-      if (useBff() && bffQuote?.groups?.length) {
-        prefix += `<p style="margin:0 0 10px;font-size:.82rem;color:var(--muted)">${q.bffBadge || "Live AnyRent rates via BFF (read-only)"}</p>`;
       }
       list.innerHTML =
         prefix +
@@ -1445,20 +1404,13 @@
             .map((l) => `<li><span>${l.name}${l.qty > 1 ? ` ×${l.qty}` : ""}</span><span>${money(l.amount)}</span></li>`)
             .join("")}</ul>`
         : "";
-      const sourceNote = usingLive
-        ? q.bffNote || "Live rates via BFF · no booking created · payment not connected yet"
-        : q.demoNote;
-      const showDep = (useCoverMatrix() || usingLive || plan !== "cdw") && (deposit != null || excess != null);
+      const sourceNote = "";
+      const showDep = (deposit != null || excess != null);
       const depHtml = showDep
           ? `<div><dt>${q.lineDeposit || "Deposit"}</dt><dd>${money(deposit || 0)}</dd></div>
              <div><dt>${q.lineExcess || "Excess"}</dt><dd>${money(excess || 0)}</dd></div>`
           : "";
-      const handoff =
-        window.READY_JEDEYE?.engineMode() === "live"
-          ? `<p style="margin:14px 0 0">
-          <button type="button" class="btn btn-solid btn-sm" id="live-handoff-btn">${q.liveHandoff || "Continue on live AnyRent"}</button>
-        </p>`
-          : "";
+      const handoff = "";
       box.innerHTML = `
         <dl>
           <div><dt>${dict.search.pickup}</dt><dd>${st[cur.pickup] || cur.pickup}</dd></div>
@@ -1476,22 +1428,8 @@
         ${extrasHtml}
         ${bffLoading ? `<p style="margin:12px 0 0;font-size:.82rem;color:var(--muted)">${q.bffLoading || "Loading…"}</p>` : ""}
         ${bffError && useBff() && !usingLive ? `<p style="margin:8px 0 0;font-size:.82rem;color:var(--ember)">${bffError}</p>` : ""}
-        <p style="margin:12px 0 0;font-size:.82rem;color:var(--muted)">${sourceNote}</p>
-        <p style="margin:6px 0 0;font-size:.82rem;color:var(--muted)">${q.mpNote}</p>
-        ${handoff}
       `;
       if (stickyTotal) stickyTotal.textContent = money(total);
-      document.getElementById("live-handoff-btn")?.addEventListener("click", () => {
-        if (!window.READY_JEDEYE) return;
-        try {
-          window.READY_JEDEYE.handoffToLiveBooking(cur, {
-            lang: getLang() === "pt" ? "pt" : getLang() === "es" ? "es" : "en",
-          });
-        } catch (err) {
-          console.warn(err);
-          location.href = window.READY_JEDEYE.liveBookingHintUrl(cur);
-        }
-      });
       window.__readyQuoteTotal = {
         cur,
         car,
@@ -1517,9 +1455,9 @@
       const snap = window.__readyQuoteTotal;
       const label = snap?.car ? carLabel(snap.car.id).name : "";
       const extrasTxt = (snap?.extrasLines || []).map((l) => `${l.name}×${l.qty}`).join(", ");
-      const source = snap?.usingLive ? "BFF live rates" : "demo rates";
+      const cover = snap?.cur?.insurancePlan || "cdw";
       const msg = encodeURIComponent(
-        `Ready quote (${source})\n${stored.name || ""}\n${stored.email || ""} · ${stored.phone || ""}\n${dict.stations[snap.cur.pickup]} → ${dict.stations[snap.cur.dropoff]}\n${snap.cur.from} → ${snap.cur.until}\n${label}\nExtras: ${extrasTxt || "—"}\nPrefer pay: ${pay}\nTotal: ${money(snap.total)}\n${stored.notes || ""}\n(No online charge yet — prototype)`
+        `Ready Rent-a-Car — cotización\n${stored.name || ""}\n${stored.email || ""} · ${stored.phone || ""}\n${dict.stations[snap.cur.pickup]} → ${dict.stations[snap.cur.dropoff]}\n${snap.cur.from} → ${snap.cur.until}\n${label}\nCobertura: ${cover}\nExtras: ${extrasTxt || "—"}\nPreferencia de pago: ${pay}\nTotal: ${money(snap.total)}\n${stored.notes || ""}`
       );
       document.getElementById("success").hidden = false;
       document.getElementById("success-title").textContent = q.successTitleSafe || q.successTitle;

@@ -131,7 +131,7 @@ window.READY_DATA = {
       liveCode: "silla-bebe",
       icon: "👶",
       pricing: "daily",
-      amount: 8000,
+      amount: 9000,
       maxQty: 2,
       common: true,
     },
@@ -140,53 +140,16 @@ window.READY_DATA = {
       liveCode: "silla-nino",
       icon: "🧒",
       pricing: "daily",
-      amount: 8000,
-      maxQty: 2,
-      common: true,
-    },
-    {
-      id: "booster",
-      liveCode: null,
-      icon: "💺",
-      pricing: "daily",
-      amount: 6000,
-      maxQty: 3,
-      common: true,
-    },
-    {
-      id: "driver",
-      liveCode: null,
-      icon: "🪪",
-      pricing: "daily",
-      amount: 15000,
-      maxQty: 2,
-      common: true,
-    },
-    {
-      id: "gps",
-      liveCode: null,
-      icon: "📍",
-      pricing: "daily",
       amount: 9000,
-      maxQty: 1,
-      common: false,
-    },
-    {
-      id: "ski",
-      liveCode: null,
-      icon: "🎿",
-      pricing: "daily",
-      amount: 10000,
-      maxQty: 1,
-      seasonal: true,
-      common: false,
+      maxQty: 2,
+      common: true,
     },
     {
       id: "afterhours",
       liveCode: "fuera-de-horario",
       icon: "🌙",
       pricing: "once",
-      amount: 25000,
+      amount: 45000,
       maxQty: 1,
       common: false,
     },
@@ -197,9 +160,7 @@ window.READY_DATA = {
     { id: "total", liveCode: "SEGURO TOTAL", required: false },
   ],
   /**
-   * Optional A — Invernalia-style include matrix (static marketing rows).
-   * Prices / excess / deposit still come from AnyRent when BFF is on.
-   * Gated by features.insuranceMatrix (or ?ff=insuranceMatrix).
+   * Coverage matrix (CDW / Premium / Total) — product rows; prices from AnyRent.
    */
   coverageCompare: {
     plans: ["cdw", "premium", "total"],
@@ -212,16 +173,14 @@ window.READY_DATA = {
       { id: "zeroExcess", cdw: false, premium: false, total: true },
     ],
   },
-  // Feature flags (override with ?ff=name or footer toggle)
+  // Dev-only: ?ff=-insuranceMatrix to use simple Basic/Premium. No UI toggle.
   features: {
-    insuranceMatrix: false,
+    insuranceMatrix: true,
   },
   api: {
     baseUrl: "https://readyrac.api.anyrent.pt/v1",
-    // Key must live only in a server BFF — never in this file or the browser
     authHeader: "X-Api-Key",
   },
-  // Public BFF (Cloudflare Worker). Read-only: stations / fleets / optionals / prices.
   bff: {
     baseUrl: "https://ready-rentacar-bff.ready-rentacar-ft.workers.dev",
   },
