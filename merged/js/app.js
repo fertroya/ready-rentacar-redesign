@@ -760,6 +760,26 @@
     const sticky = document.getElementById("quote-sticky");
     const stickyTotal = document.getElementById("quote-sticky-total");
     const stickyCta = document.getElementById("quote-sticky-cta");
+    const stage = document.getElementById("quote-stage");
+    const trailFill = document.getElementById("trail-fill");
+    const trailProgress = document.getElementById("trail-progress");
+    const stageKicker = document.getElementById("quote-stage-kicker");
+    const quoteEyebrow = document.getElementById("quote-eyebrow");
+
+    function stepShort(raw) {
+      return String(raw || "").replace(/^\d+\s*[·.\-–—]\s*/, "").trim();
+    }
+
+    function stageCopy(n) {
+      const keys = {
+        1: q.stage1,
+        2: q.stage2,
+        3: useCoverMatrix() ? q.stage3Cover || q.stage3 : q.stage3,
+        4: q.stage4,
+        5: q.stage5,
+      };
+      return keys[n] || "";
+    }
 
     function useBff() {
       return window.READY_JEDEYE?.engineMode() === "bff" && window.READY_BFF;
@@ -841,7 +861,27 @@
       });
       const step3 = document.getElementById("q-step3-label");
       if (step3) {
-        step3.textContent = useCoverMatrix() ? q.step3Cover || q.step3 : q.step3;
+        const raw = useCoverMatrix() ? q.step3Cover || q.step3 : q.step3;
+        step3.textContent = stepShort(raw);
+      }
+      if (stage) {
+        stage.dataset.step = String(step);
+        // Retrigger media subtle fade by toggling class
+        stage.classList.remove("is-shifting");
+        void stage.offsetWidth;
+        stage.classList.add("is-shifting");
+      }
+      if (trailFill) {
+        const pct = Math.max(8, Math.round(((step - 1) / 4) * 100));
+        trailFill.style.width = `${pct}%`;
+      }
+      if (trailProgress) {
+        const tpl = q.progressMark || "{current} / {total}";
+        trailProgress.textContent = tpl.replace("{current}", String(step)).replace("{total}", "5");
+      }
+      if (stageKicker) stageKicker.textContent = stageCopy(step);
+      if (quoteEyebrow) {
+        quoteEyebrow.textContent = q.eyebrow || "Ready";
       }
       if (sticky && stickyCta) {
         sticky.hidden = false;
@@ -878,7 +918,9 @@
       }
       renderSummary();
       setError("");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      const body = document.querySelector(".quote-body");
+      if (body) body.scrollIntoView({ behavior: "smooth", block: "start" });
+      else window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     const form = document.getElementById("quote-form");
@@ -915,12 +957,14 @@
     if (notesInput && trip.notes) notesInput.value = trip.notes;
     dropWrap.hidden = !oneway.checked;
 
-    form.querySelector("#q-step1-label").textContent = q.step1;
-    form.querySelector("#q-step2-label").textContent = q.step2;
-    form.querySelector("#q-step3-label").textContent = q.step3;
-    form.querySelector("#q-step4-label").textContent = q.step4;
-    form.querySelector("#q-step5-label").textContent = q.step5;
-    form.querySelectorAll("[data-i18n]").forEach((el) => {
+    document.getElementById("q-step1-label").textContent = stepShort(q.step1);
+    document.getElementById("q-step2-label").textContent = stepShort(q.step2);
+    document.getElementById("q-step3-label").textContent = stepShort(
+      useCoverMatrix() ? q.step3Cover || q.step3 : q.step3
+    );
+    document.getElementById("q-step4-label").textContent = stepShort(q.step4);
+    document.getElementById("q-step5-label").textContent = stepShort(q.step5);
+    document.querySelectorAll(".page-quote [data-i18n]").forEach((el) => {
       const key = el.dataset.i18n;
       const parts = key.split(".");
       let cur = dict;

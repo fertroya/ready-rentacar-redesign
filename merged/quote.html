@@ -8,133 +8,250 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/site.css" />
-
 </head>
 <body data-page="quote">
   <header class="site-header" id="site-header"></header>
-  <main id="main" class="page page-quote">
-    <p class="eyebrow">Ready</p>
-    <h1 id="page-title">Online quote</h1>
-    <p class="lede" id="page-lede"></p>
+  <main id="main" class="page-quote">
+    <section class="quote-stage" id="quote-stage" data-step="1" aria-label="Quote">
+      <div class="quote-stage-media" aria-hidden="true"></div>
+      <div class="quote-stage-veil" aria-hidden="true"></div>
+      <div class="quote-stage-grain" aria-hidden="true"></div>
+      <div class="quote-stage-inner">
+        <div class="quote-stage-copy">
+          <p class="eyebrow quote-stage-eyebrow" id="quote-eyebrow">Ready</p>
+          <h1 id="page-title">Online quote</h1>
+          <p class="lede" id="page-lede"></p>
+          <p class="quote-stage-kicker" id="quote-stage-kicker"></p>
+        </div>
 
-    <div class="quote-layout">
-      <form class="quote-panel" id="quote-form">
-        <nav class="steps" aria-label="Quote steps">
-          <button type="button" class="step-pill is-active" data-qstep="1" id="q-step1-label">1 · Trip</button>
-          <button type="button" class="step-pill" data-qstep="2" id="q-step2-label" disabled>2 · Vehicle</button>
-          <button type="button" class="step-pill" data-qstep="3" id="q-step3-label" disabled>3 · Extras</button>
-          <button type="button" class="step-pill" data-qstep="4" id="q-step4-label" disabled>4 · Details</button>
-          <button type="button" class="step-pill" data-qstep="5" id="q-step5-label" disabled>5 · Pay</button>
+        <nav class="quote-trail" aria-label="Quote progress">
+          <div class="trail-rail" aria-hidden="true">
+            <div class="trail-rail-fill" id="trail-fill"></div>
+          </div>
+          <ol class="trail-steps">
+            <li>
+              <button type="button" class="trail-step is-active" data-qstep="1" aria-current="step">
+                <span class="trail-mark" aria-hidden="true">
+                  <svg class="ready-chevs" viewBox="0 0 56 32" focusable="false"><path d="M2 2h10l16 14L12 30H2l16-14L2 2zm22 0h10l16 14L34 30H24l16-14L24 2z"/></svg>
+                </span>
+                <span class="trail-text">
+                  <span class="trail-idx">01</span>
+                  <span class="trail-label" id="q-step1-label">Trip</span>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="trail-step" data-qstep="2" disabled>
+                <span class="trail-mark" aria-hidden="true">
+                  <svg class="ready-chevs" viewBox="0 0 56 32" focusable="false"><path d="M2 2h10l16 14L12 30H2l16-14L2 2zm22 0h10l16 14L34 30H24l16-14L24 2z"/></svg>
+                </span>
+                <span class="trail-text">
+                  <span class="trail-idx">02</span>
+                  <span class="trail-label" id="q-step2-label">Vehicle</span>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="trail-step" data-qstep="3" disabled>
+                <span class="trail-mark" aria-hidden="true">
+                  <svg class="ready-chevs" viewBox="0 0 56 32" focusable="false"><path d="M2 2h10l16 14L12 30H2l16-14L2 2zm22 0h10l16 14L34 30H24l16-14L24 2z"/></svg>
+                </span>
+                <span class="trail-text">
+                  <span class="trail-idx">03</span>
+                  <span class="trail-label" id="q-step3-label">Extras</span>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="trail-step" data-qstep="4" disabled>
+                <span class="trail-mark" aria-hidden="true">
+                  <svg class="ready-chevs" viewBox="0 0 56 32" focusable="false"><path d="M2 2h10l16 14L12 30H2l16-14L2 2zm22 0h10l16 14L34 30H24l16-14L24 2z"/></svg>
+                </span>
+                <span class="trail-text">
+                  <span class="trail-idx">04</span>
+                  <span class="trail-label" id="q-step4-label">Details</span>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="trail-step" data-qstep="5" disabled>
+                <span class="trail-mark" aria-hidden="true">
+                  <svg class="ready-chevs" viewBox="0 0 56 32" focusable="false"><path d="M2 2h10l16 14L12 30H2l16-14L2 2zm22 0h10l16 14L34 30H24l16-14L24 2z"/></svg>
+                </span>
+                <span class="trail-text">
+                  <span class="trail-idx">05</span>
+                  <span class="trail-label" id="q-step5-label">Pay</span>
+                </span>
+              </button>
+            </li>
+          </ol>
+          <p class="trail-progress" id="trail-progress" aria-live="polite">1 / 5</p>
         </nav>
-        <p class="field-error" id="quote-error" hidden></p>
+      </div>
+    </section>
 
-        <div data-qpanel="1">
-          <div class="field" style="margin-bottom:12px">
-            <label data-i18n="search.pickup">Pick-up</label>
-            <select name="pickup"></select>
-          </div>
-          <label class="check" style="margin-bottom:12px">
-            <input type="checkbox" name="oneway" />
-            <span data-i18n="search.oneway">One-way</span>
-          </label>
-          <div class="field" data-drop-wrap hidden style="margin-bottom:12px">
-            <label data-i18n="search.dropoff">Drop-off</label>
-            <select name="dropoff"></select>
-          </div>
-          <div class="grid-2" style="margin-bottom:16px">
-            <div class="field">
-              <label data-i18n="search.from">From</label>
-              <input type="datetime-local" name="from" />
-            </div>
-            <div class="field">
-              <label data-i18n="search.until">Until</label>
-              <input type="datetime-local" name="until" />
-            </div>
-          </div>
-          <div class="quote-actions">
-            <button type="button" class="btn btn-ember" id="to-step-2" data-i18n="quotePage.showCars">Show vehicles</button>
-          </div>
-        </div>
+    <div class="quote-body">
+      <div class="quote-layout">
+        <form class="quote-panel quote-panel-main" id="quote-form">
+          <p class="field-error" id="quote-error" hidden></p>
 
-        <div data-qpanel="2" hidden>
-          <div id="quote-cars"></div>
-          <div class="quote-actions">
-            <button type="button" class="btn btn-ghost" id="back-1" data-i18n="quotePage.back">Back</button>
-            <button type="button" class="btn btn-ember" id="to-step-3" data-i18n="quotePage.showExtras">Continue to extras</button>
-          </div>
-        </div>
-
-        <div data-qpanel="3" hidden>
-          <div id="cover-matrix" class="cover-matrix" hidden></div>
-          <div id="cover-simple" class="cover-simple" hidden></div>
-          <p data-i18n="quotePage.extrasLede" style="margin:0 0 14px;color:var(--muted)"></p>
-          <div id="quote-extras" class="extras-picker"></div>
-          <div class="quote-actions">
-            <button type="button" class="btn btn-ghost" id="back-2" data-i18n="quotePage.back">Back</button>
-            <button type="button" class="btn btn-ember" id="to-step-4" data-i18n="quotePage.continue">Continue</button>
-          </div>
-        </div>
-
-        <div data-qpanel="4" hidden>
-          <div class="field" style="margin-bottom:12px">
-            <label data-i18n="quotePage.name">Name</label>
-            <input name="name" autocomplete="name" required />
-          </div>
-          <div class="field" style="margin-bottom:12px">
-            <label data-i18n="quotePage.email">Email</label>
-            <input type="email" name="email" autocomplete="email" required />
-          </div>
-          <div class="field" style="margin-bottom:12px">
-            <label data-i18n="quotePage.phone">Phone</label>
-            <input name="phone" type="tel" autocomplete="tel" required />
-          </div>
-          <div class="field" style="margin-bottom:16px">
-            <label data-i18n="quotePage.notes">Notes</label>
-            <textarea name="notes" rows="3" data-i18n="quotePage.notesPh"></textarea>
-          </div>
-          <div class="quote-actions">
-            <button type="button" class="btn btn-ghost" id="back-3" data-i18n="quotePage.back">Back</button>
-            <button type="button" class="btn btn-ember" id="to-step-5" data-i18n="quotePage.continue">Continue</button>
-          </div>
-        </div>
-
-        <div data-qpanel="5" hidden>
-          <p data-i18n="quotePage.payLedeSafe" style="margin:0 0 8px;color:var(--muted)"></p>
-          <div class="pay-methods" role="radiogroup" aria-label="Payment preference">
-            <label class="pay-option">
-              <input type="radio" name="pay" value="mercadopago" checked />
+          <div data-qpanel="1">
+            <header class="quote-panel-head">
+              <span class="quote-panel-idx" aria-hidden="true">01</span>
               <div>
-                <div class="pay-brand">
-                  <span class="pay-logo mp">MP</span>
-                  <span data-i18n="quotePage.payMp">Mercado Pago</span>
-                </div>
-                <p class="pay-desc" data-i18n="quotePage.payMpDesc">Cards, debit, and 6 interest-free installments with Premium.</p>
+                <h2 class="quote-panel-title" data-i18n="quotePage.panelTrip">Your trip</h2>
+                <p class="quote-panel-sub" data-i18n="quotePage.panelTripSub">Stations and dates — the route starts here.</p>
               </div>
-              <span class="pay-badge hot" data-i18n="quotePage.payMpBadge">6×</span>
+            </header>
+            <div class="field" style="margin-bottom:12px">
+              <label data-i18n="search.pickup">Pick-up</label>
+              <select name="pickup"></select>
+            </div>
+            <label class="check" style="margin-bottom:12px">
+              <input type="checkbox" name="oneway" />
+              <span data-i18n="search.oneway">One-way</span>
             </label>
-            <label class="pay-option">
-              <input type="radio" name="pay" value="stripe" />
-              <div>
-                <div class="pay-brand">
-                  <span class="pay-logo stripe">Stripe</span>
-                  <span data-i18n="quotePage.payStripe">Stripe</span>
-                </div>
-                <p class="pay-desc" data-i18n="quotePage.payStripeDesc">International cards — ideal for foreign travelers.</p>
+            <div class="field" data-drop-wrap hidden style="margin-bottom:12px">
+              <label data-i18n="search.dropoff">Drop-off</label>
+              <select name="dropoff"></select>
+            </div>
+            <div class="grid-2" style="margin-bottom:16px">
+              <div class="field">
+                <label data-i18n="search.from">From</label>
+                <input type="datetime-local" name="from" />
               </div>
-              <span class="pay-badge" data-i18n="quotePage.payStripeBadge">Intl</span>
-            </label>
+              <div class="field">
+                <label data-i18n="search.until">Until</label>
+                <input type="datetime-local" name="until" />
+              </div>
+            </div>
+            <div class="quote-actions">
+              <button type="button" class="btn btn-ember btn-lg quote-fwd" id="to-step-2" data-i18n="quotePage.showCars">Show vehicles</button>
+            </div>
           </div>
-          <div class="quote-actions">
-            <button type="button" class="btn btn-ghost" id="back-4" data-i18n="quotePage.back">Back</button>
-            <button type="submit" class="btn btn-ember" data-i18n="quotePage.payCtaSafe">Send quote on WhatsApp</button>
-          </div>
-        </div>
-      </form>
 
-      <aside class="quote-panel quote-aside" id="quote-aside">
-        <h3 style="margin-top:0" data-i18n="quotePage.summary">Summary</h3>
-        <div class="summary-box" id="quote-summary"></div>
-      </aside>
+          <div data-qpanel="2" hidden>
+            <header class="quote-panel-head">
+              <span class="quote-panel-idx" aria-hidden="true">02</span>
+              <div>
+                <h2 class="quote-panel-title" data-i18n="quotePage.panelCar">Your vehicle</h2>
+                <p class="quote-panel-sub" data-i18n="quotePage.panelCarSub">SUVs and pickups built for Patagonia roads.</p>
+              </div>
+            </header>
+            <div id="quote-cars"></div>
+            <div class="quote-actions">
+              <button type="button" class="btn btn-ghost" id="back-1" data-i18n="quotePage.back">Back</button>
+              <button type="button" class="btn btn-ember btn-lg quote-fwd" id="to-step-3" data-i18n="quotePage.showExtras">Continue to extras</button>
+            </div>
+          </div>
+
+          <div data-qpanel="3" hidden>
+            <header class="quote-panel-head">
+              <span class="quote-panel-idx" aria-hidden="true">03</span>
+              <div>
+                <h2 class="quote-panel-title" data-i18n="quotePage.panelExtras">Cover & extras</h2>
+                <p class="quote-panel-sub" data-i18n="quotePage.panelExtrasSub">Insurance clarity, then chains and seats.</p>
+              </div>
+            </header>
+            <div id="cover-matrix" class="cover-matrix" hidden></div>
+            <div id="cover-simple" class="cover-simple" hidden></div>
+            <p data-i18n="quotePage.extrasLede" style="margin:0 0 14px;color:var(--muted)"></p>
+            <div id="quote-extras" class="extras-picker"></div>
+            <div class="quote-actions">
+              <button type="button" class="btn btn-ghost" id="back-2" data-i18n="quotePage.back">Back</button>
+              <button type="button" class="btn btn-ember btn-lg quote-fwd" id="to-step-4" data-i18n="quotePage.continue">Continue</button>
+            </div>
+          </div>
+
+          <div data-qpanel="4" hidden>
+            <header class="quote-panel-head">
+              <span class="quote-panel-idx" aria-hidden="true">04</span>
+              <div>
+                <h2 class="quote-panel-title" data-i18n="quotePage.panelDetails">Your details</h2>
+                <p class="quote-panel-sub" data-i18n="quotePage.panelDetailsSub">So we can reach you with the quote.</p>
+              </div>
+            </header>
+            <div class="field" style="margin-bottom:12px">
+              <label data-i18n="quotePage.name">Name</label>
+              <input name="name" autocomplete="name" required />
+            </div>
+            <div class="field" style="margin-bottom:12px">
+              <label data-i18n="quotePage.email">Email</label>
+              <input type="email" name="email" autocomplete="email" required />
+            </div>
+            <div class="field" style="margin-bottom:12px">
+              <label data-i18n="quotePage.phone">Phone</label>
+              <input name="phone" type="tel" autocomplete="tel" required />
+            </div>
+            <div class="field" style="margin-bottom:16px">
+              <label data-i18n="quotePage.notes">Notes</label>
+              <textarea name="notes" rows="3" data-i18n="quotePage.notesPh"></textarea>
+            </div>
+            <div class="quote-actions">
+              <button type="button" class="btn btn-ghost" id="back-3" data-i18n="quotePage.back">Back</button>
+              <button type="button" class="btn btn-ember btn-lg quote-fwd" id="to-step-5" data-i18n="quotePage.continue">Continue</button>
+            </div>
+          </div>
+
+          <div data-qpanel="5" hidden>
+            <header class="quote-panel-head">
+              <span class="quote-panel-idx" aria-hidden="true">05</span>
+              <div>
+                <h2 class="quote-panel-title" data-i18n="quotePage.panelPay">Payment preference</h2>
+                <p class="quote-panel-sub" data-i18n="quotePage.panelPaySub">Tell us how you’d like to pay when we confirm.</p>
+              </div>
+            </header>
+            <p data-i18n="quotePage.payLedeSafe" style="margin:0 0 8px;color:var(--muted)"></p>
+            <div class="pay-methods" role="radiogroup" aria-label="Payment preference">
+              <label class="pay-option">
+                <input type="radio" name="pay" value="mercadopago" checked />
+                <div>
+                  <div class="pay-brand">
+                    <span class="pay-logo mp">MP</span>
+                    <span data-i18n="quotePage.payMp">Mercado Pago</span>
+                  </div>
+                  <p class="pay-desc" data-i18n="quotePage.payMpDesc">Cards, debit, and 6 interest-free installments with Premium.</p>
+                </div>
+                <span class="pay-badge hot" data-i18n="quotePage.payMpBadge">6×</span>
+              </label>
+              <label class="pay-option">
+                <input type="radio" name="pay" value="stripe" />
+                <div>
+                  <div class="pay-brand">
+                    <span class="pay-logo stripe">Stripe</span>
+                    <span data-i18n="quotePage.payStripe">Stripe</span>
+                  </div>
+                  <p class="pay-desc" data-i18n="quotePage.payStripeDesc">International cards — ideal for foreign travelers.</p>
+                </div>
+                <span class="pay-badge" data-i18n="quotePage.payStripeBadge">Intl</span>
+              </label>
+            </div>
+            <div class="quote-actions">
+              <button type="button" class="btn btn-ghost" id="back-4" data-i18n="quotePage.back">Back</button>
+              <button type="submit" class="btn btn-ember btn-lg quote-fwd" data-i18n="quotePage.payCtaSafe">Send quote on WhatsApp</button>
+            </div>
+          </div>
+        </form>
+
+        <aside class="quote-panel quote-aside" id="quote-aside">
+          <div class="quote-aside-top">
+            <span class="quote-aside-mark" aria-hidden="true">
+              <svg class="ready-chevs" viewBox="0 0 56 32" focusable="false"><path d="M2 2h10l16 14L12 30H2l16-14L2 2zm22 0h10l16 14L34 30H24l16-14L24 2z"/></svg>
+            </span>
+            <h3 style="margin:0" data-i18n="quotePage.summary">Summary</h3>
+          </div>
+          <div class="summary-box" id="quote-summary"></div>
+        </aside>
+      </div>
+
+      <div class="card" id="success" hidden style="margin-top:24px">
+        <div class="card-body">
+          <h2 id="success-title"></h2>
+          <p id="success-body" style="color:var(--muted)"></p>
+          <p id="success-pay" style="font-weight:600;margin:12px 0"></p>
+          <a class="btn btn-ember" id="success-wa" href="#" target="_blank" rel="noopener"></a>
+        </div>
+      </div>
     </div>
 
     <div class="quote-sticky" id="quote-sticky" hidden>
@@ -142,16 +259,7 @@
         <span data-i18n="quotePage.lineTotal">Total</span>
         <strong id="quote-sticky-total">—</strong>
       </div>
-      <button type="button" class="btn btn-ember" id="quote-sticky-cta">Continue</button>
-    </div>
-
-    <div class="card" id="success" hidden style="margin-top:24px">
-      <div class="card-body">
-        <h2 id="success-title"></h2>
-        <p id="success-body" style="color:var(--muted)"></p>
-        <p id="success-pay" style="font-weight:600;margin:12px 0"></p>
-        <a class="btn btn-ember" id="success-wa" href="#" target="_blank" rel="noopener"></a>
-      </div>
+      <button type="button" class="btn btn-ember quote-fwd" id="quote-sticky-cta">Continue</button>
     </div>
   </main>
   <footer class="site-footer" id="site-footer"></footer>
