@@ -1,22 +1,47 @@
 # Ready Rent-a-Car — BFF
 
-Cloudflare Worker that holds the AnyRent Cloud API key and exposes a **public, read-only** API for the redesign.
+Cloudflare Worker that holds the AnyRent Cloud API key and exposes a **gated, read-only** API for the redesign.
 
 ```text
-Browser (merged/ later) ──GET /api/*──► BFF Worker ──X-Api-Key──► readyrac.api.anyrent.pt/v1
+Browser (merged/) ──GET /api/* + X-Ready-Bff-Token──► BFF Worker ──X-Api-Key──► readyrac.api.anyrent.pt/v1
 ```
 
 **Not exposed:** `/bookings`, `/customers`, payment secrets. Payments come in a later phase.
 
+## Quota gate (scrapers / refreshes)
+
+Public staging must **not** burn the shared AnyRent daily quota.
+
+| Layer | Behavior |
+|-------|----------|
+| Frontend default | Engine **`demo`** (mock prices). Live AnyRent only with `?engine=bff` **and** a browser token. |
+| Worker `/api/*` | Requires header **`X-Ready-Bff-Token`** matching secret `BFF_BROWSER_TOKEN`. Wrong/missing → **401**, zero upstream. |
+| `/health` | Public (CI smoke). |
+
+Enable BFF locally / controlled demos (never commit the token):
+
+```js
+localStorage.setItem('ready_bff_token', '<same value as BFF_BROWSER_TOKEN>')
+localStorage.setItem('ready_engine', 'bff')
+// or: ?engine=bff after setting the token
+```
+
+`curl` without the header must fail:
+
+```bash
+curl -sS 'https://ready-rentacar-bff.ready-rentacar-ft.workers.dev/api/stations?lang=es'
+# {"error":"Missing or invalid X-Ready-Bff-Token"}
+```
+
 ## Endpoints
 
-| Method | Path | Upstream |
-|--------|------|----------|
-| `GET` | `/health` | — |
-| `GET` | `/api/stations?lang=es` | `/stations` |
-| `GET` | `/api/fleets?lang=es` | `/fleets` |
-| `GET` | `/api/optionals?lang=es` | `/optionals` |
-| `GET` | `/api/prices?...` | `/prices` |
+| Method | Path | Upstream | Auth |
+|--------|------|----------|------|
+| `GET` | `/health` | — | none |
+| `GET` | `/api/stations?lang=es` | `/stations` | `X-Ready-Bff-Token` |
+| `GET` | `/api/fleets?lang=es` | `/fleets` | `X-Ready-Bff-Token` |
+| `GET` | `/api/optionals?lang=es` | `/optionals` | `X-Ready-Bff-Token` |
+| `GET` | `/api/prices?...` | `/prices` | `X-Ready-Bff-Token` |
 
 ### `/api/prices` query
 
@@ -38,16 +63,19 @@ Auth to AnyRent: header `X-Api-Key` only (never query `api_key` from this BFF).
 cd bff
 npm install
 cp .dev.vars.example .dev.vars
-# paste key from October → ANYRENT → Configuraciónes → AnyRent API
+# paste ANYRENT_API_KEY + BFF_BROWSER_TOKEN
 npm run dev
 ```
 
 Smoke:
 
 ```bash
+TOKEN=…   # same as BFF_BROWSER_TOKEN
 curl -s http://127.0.0.1:8787/health | jq .
-curl -s 'http://127.0.0.1:8787/api/stations?lang=es' | jq '.data | length'
-curl -s 'http://127.0.0.1:8787/api/prices?pickup_station=bariloche&dropoff_station=bariloche&pickup_date=2026-08-01T10:00:00Z&dropoff_date=2026-08-08T10:00:00Z&lang=es' \
+curl -s -H "X-Ready-Bff-Token: $TOKEN" \
+  'http://127.0.0.1:8787/api/stations?lang=es' | jq '.data | length'
+curl -s -H "X-Ready-Bff-Token: $TOKEN" \
+  'http://127.0.0.1:8787/api/prices?pickup_station=bariloche&dropoff_station=bariloche&pickup_date=2026-08-01T10:00:00Z&dropoff_date=2026-08-08T10:00:00Z&lang=es' \
   | jq '.query, (.data.fleets[0].groups | map({code, total: .rate.total_after_tax}))'
 ```
 
@@ -59,6 +87,7 @@ Cuenta staging: subdominio `ready-rentacar-ft.workers.dev`.
 
 ```bash
 npx wrangler secret put ANYRENT_API_KEY
+npx wrangler secret put BFF_BROWSER_TOKEN
 npm run deploy
 ```
 
@@ -85,23 +114,24 @@ Repo secrets (Settings → Secrets → Actions):
 
 Optional: create GitHub Environment `bff-staging` later if you want approval gates.
 
-`ANYRENT_API_KEY` stays as a **Worker secret** (`wrangler secret put`); Actions deploy does not rewrite it.
+`ANYRENT_API_KEY` and `BFF_BROWSER_TOKEN` stay as **Worker secrets** (`wrangler secret put`); Actions deploy does not rewrite them.
 
 Workers Logs: `[observability] enabled = true` in `wrangler.toml` (dashboard → Worker → Observability).
 
 ## Frontend wire (read-only)
 
-Default mock mode is **`bff`** (`merged/js`): quote step loads `/api/prices` from the Worker.
+Default mock mode is **`demo`** (`merged/js`): no AnyRent calls until you opt into BFF with a token.
 
 - **Safe:** catalog + prices only (no `POST /bookings`, no payment charge)
 - **Pay step:** WhatsApp summary only until F4 + deposit
 - **October handoff:** only with `?engine=live` (opt-in)
-- Toggle footer: **BFF ↔ DEMO**
+- Toggle footer: **BFF ↔ DEMO** (BFF still needs `ready_bff_token`)
 
 Mock config: `READY_DATA.bff.baseUrl` in `merged/js/data.js`.
 
 ## Safety
 
-- Never commit `.dev.vars`
+- Never commit `.dev.vars` or `ready_bff_token` values
 - Rotate `ANYRENT_API_KEY` if it was pasted in chat / October screenshots
-- Do not proxy ops endpoints (`/bookings`, `/customers`) through this public BFF
+- Rotate `BFF_BROWSER_TOKEN` if it was shared in chat or screenshots
+- Do not proxy ops endpoints (`/bookings`, `/customers`) through this BFF

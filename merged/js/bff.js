@@ -1,9 +1,11 @@
 /**
  * Ready BFF client — read-only AnyRent proxy.
- * Never holds API keys; never POST /bookings.
+ * Never holds AnyRent API keys; never POST /bookings.
+ * Browser gate: localStorage.ready_bff_token → header X-Ready-Bff-Token (never commit).
  */
 (function () {
   const DEFAULT_BASE = "https://ready-rentacar-bff.ready-rentacar-ft.workers.dev";
+  const TOKEN_HEADER = "X-Ready-Bff-Token";
 
   function baseUrl() {
     const fromData = window.READY_DATA?.bff?.baseUrl;
@@ -17,14 +19,43 @@
     return DEFAULT_BASE;
   }
 
+  /** Browser token for BFF gate — localStorage only, never ship in repo. */
+  function browserToken() {
+    try {
+      const fromLs = localStorage.getItem("ready_bff_token");
+      if (fromLs && fromLs.trim()) return fromLs.trim();
+    } catch {
+      /* ignore */
+    }
+    const fromData = window.READY_DATA?.bff?.browserToken;
+    if (fromData && String(fromData).trim()) return String(fromData).trim();
+    return "";
+  }
+
   async function getJson(path, query = {}) {
+    if (path !== "/health" && !path.endsWith("/health")) {
+      const token = browserToken();
+      if (!token) {
+        const err = new Error(
+          "BFF token missing — set localStorage.ready_bff_token (see docs/BFF.md)",
+        );
+        err.status = 401;
+        throw err;
+      }
+    }
+
     const url = new URL(path, baseUrl() + "/");
     Object.entries(query).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
     });
+
+    const headers = { Accept: "application/json" };
+    const token = browserToken();
+    if (token) headers[TOKEN_HEADER] = token;
+
     const res = await fetch(url.toString(), {
       method: "GET",
-      headers: { Accept: "application/json" },
+      headers,
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -167,6 +198,7 @@
 
   window.READY_BFF = {
     baseUrl,
+    browserToken,
     health,
     fetchPrices,
     fetchOptionals,

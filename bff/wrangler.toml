@@ -18,6 +18,8 @@ CORS_ORIGINS = "http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:808
 
 # Secrets (set locally in .dev.vars — see .dev.vars.example):
 #   ANYRENT_API_KEY
+#   BFF_BROWSER_TOKEN   # browser gate; header X-Ready-Bff-Token
 #
 # Production:
 #   npx wrangler secret put ANYRENT_API_KEY
+#   npx wrangler secret put BFF_BROWSER_TOKEN

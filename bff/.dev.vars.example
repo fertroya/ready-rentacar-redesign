@@ -2,3 +2,7 @@
 # Get key from October: ANYRENT → Configuraciónes → AnyRent API → Clave API
 # Prefer rotating the key with Jedeye after chat exposure.
 ANYRENT_API_KEY=
+
+# Browser gate for /api/* (header X-Ready-Bff-Token). Distinct from AnyRent key.
+# Generate e.g.: openssl rand -hex 24
+BFF_BROWSER_TOKEN=

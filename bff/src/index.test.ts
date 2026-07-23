@@ -2,10 +2,21 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import worker from './index'
 import type { Env } from './types'
 
+const TOKEN = 'test-browser-token'
+
 const env: Env = {
   ANYRENT_API_BASE: 'https://anyrent.test/v1',
   ANYRENT_API_KEY: 'k-test',
+  BFF_BROWSER_TOKEN: TOKEN,
   CORS_ORIGINS: 'https://fertroya.github.io',
+}
+
+function apiRequest(path: string, init: RequestInit = {}) {
+  const headers = new Headers(init.headers)
+  if (!headers.has('X-Ready-Bff-Token')) {
+    headers.set('X-Ready-Bff-Token', TOKEN)
+  }
+  return new Request(`https://bff.test${path}`, { ...init, headers })
 }
 
 describe('worker fetch', () => {
@@ -13,7 +24,7 @@ describe('worker fetch', () => {
     vi.unstubAllGlobals()
   })
 
-  it('returns health payload', async () => {
+  it('returns health payload without browser token', async () => {
     const res = await worker.fetch(new Request('https://bff.test/health'), env)
     expect(res.status).toBe(200)
     const body = (await res.json()) as { ok: boolean; service: string }
@@ -21,29 +32,51 @@ describe('worker fetch', () => {
     expect(body.service).toBe('ready-rentacar-bff')
   })
 
-  it('rejects non-GET', async () => {
+  it('rejects /api/* without browser token (no upstream)', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+
+    const res = await worker.fetch(new Request('https://bff.test/api/stations?lang=es'), env)
+    expect(res.status).toBe(401)
+    const body = (await res.json()) as { error: string }
+    expect(body.error).toMatch(/X-Ready-Bff-Token/)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects /api/* with wrong browser token', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+
     const res = await worker.fetch(
-      new Request('https://bff.test/api/stations', { method: 'POST' }),
+      new Request('https://bff.test/api/stations?lang=es', {
+        headers: { 'X-Ready-Bff-Token': 'wrong' },
+      }),
       env,
     )
+    expect(res.status).toBe(401)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects non-GET', async () => {
+    const res = await worker.fetch(apiRequest('/api/stations', { method: 'POST' }), env)
     expect(res.status).toBe(405)
   })
 
   it('requires prices params', async () => {
-    const res = await worker.fetch(new Request('https://bff.test/api/prices'), env)
+    const res = await worker.fetch(apiRequest('/api/prices'), env)
     expect(res.status).toBe(400)
     const body = (await res.json()) as { error: string }
     expect(String(body.error)).toMatch(/pickup_station/)
   })
 
-  it('proxies stations with X-Api-Key', async () => {
+  it('proxies stations with X-Api-Key when browser token present', async () => {
     const fetchMock = vi.fn(async () =>
       Response.json([{ code: 'bariloche' }], { status: 200 }),
     )
     vi.stubGlobal('fetch', fetchMock)
 
     const res = await worker.fetch(
-      new Request('https://bff.test/api/stations?lang=es', {
+      apiRequest('/api/stations?lang=es', {
         headers: { Origin: 'https://fertroya.github.io' },
       }),
       env,

@@ -26,7 +26,8 @@ Navigable GitHub Pages prototypes for a Patagonia-first renewal of [readyrentaca
 
 See **[docs/ANYRENT-INTEGRATION.md](./docs/ANYRENT-INTEGRATION.md)**.
 
-- Default prototype mode: **DEMO** (local indicative rates)
+- Default prototype mode: **DEMO** (local indicative rates; does not call AnyRent)
+- Opt-in **BFF** (`?engine=bff` + browser token) for live prices — see [docs/BFF.md](./docs/BFF.md)
 - Footer toggle **Engine: LIVE** (or `?engine=live`) hands search off to the public booking engine on `readyrentacar.com.ar`
 - Admin credentials must **never** go in the frontend
 
@@ -36,11 +37,11 @@ Cloudflare Worker under **[`bff/`](./bff/)** proxies `stations` / `fleets` / `op
 
 Live: https://ready-rentacar-bff.ready-rentacar-ft.workers.dev  
 
-Mock default engine = **BFF** (live prices). Coverage matrix (CDW / Premium / Total) on by default.
+Mock default engine = **DEMO** (no AnyRent). Opt-in BFF with `?engine=bff` **and** `localStorage.ready_bff_token` (see [docs/BFF.md](./docs/BFF.md)). Coverage matrix (CDW / Premium / Total) on by default.
 
 ```bash
 cd bff && npm install && cp .dev.vars.example .dev.vars
-# set ANYRENT_API_KEY, then:
+# set ANYRENT_API_KEY + BFF_BROWSER_TOKEN, then:
 npm run dev   # Wrangler = Cloudflare Workers CLI
 npm run ci    # typecheck + tests
 ```

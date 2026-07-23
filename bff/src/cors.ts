@@ -14,7 +14,7 @@ export function corsHeaders(request: Request, env: Env): HeadersInit {
   const ok = origin && allow.includes(origin)
   const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Accept',
+    'Access-Control-Allow-Headers': 'Content-Type, Accept, X-Ready-Bff-Token',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   }

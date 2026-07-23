@@ -53,14 +53,15 @@
     const q = new URL(location.href).searchParams.get("engine");
     if (q === "live" || q === "demo" || q === "bff") return q;
     try {
-      return localStorage.getItem("ready_engine") || "bff";
+      // Default demo so public staging / accidental refreshes do not burn AnyRent quota.
+      return localStorage.getItem("ready_engine") || "demo";
     } catch {
-      return "bff";
+      return "demo";
     }
   }
 
   function setEngineMode(mode) {
-    const next = mode === "live" || mode === "demo" || mode === "bff" ? mode : "bff";
+    const next = mode === "live" || mode === "demo" || mode === "bff" ? mode : "demo";
     try {
       localStorage.setItem("ready_engine", next);
     } catch {
@@ -72,8 +73,8 @@
   function cycleEngineMode() {
     const cur = engineMode();
     if (cur === "live") {
-      setEngineMode("bff");
-      return "bff";
+      setEngineMode("demo");
+      return "demo";
     }
     const next = cur === "bff" ? "demo" : "bff";
     setEngineMode(next);

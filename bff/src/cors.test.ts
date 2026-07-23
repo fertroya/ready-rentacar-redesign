@@ -5,6 +5,7 @@ import type { Env } from './types'
 const env = (origins: string): Env => ({
   ANYRENT_API_BASE: 'https://example.test/v1',
   ANYRENT_API_KEY: 'test',
+  BFF_BROWSER_TOKEN: 'test-browser-token',
   CORS_ORIGINS: origins,
 })
 
@@ -26,6 +27,7 @@ describe('cors', () => {
     >
     expect(h['Access-Control-Allow-Origin']).toBe('https://fertroya.github.io')
     expect(h['Access-Control-Allow-Methods']).toContain('GET')
+    expect(h['Access-Control-Allow-Headers']).toContain('X-Ready-Bff-Token')
   })
 
   it('omits Allow-Origin for unknown Origin', () => {

@@ -1,4 +1,5 @@
 import { AnyRentError, getFleets, getOptionals, getPrices, getStations } from './anyrent'
+import { assertBrowserToken, BrowserTokenError } from './auth'
 import { withCors } from './cors'
 import { toAnyRentDate } from './dates'
 import type { Env, Lang } from './types'
@@ -68,6 +69,18 @@ async function handle(request: Request, env: Env): Promise<Response> {
 
   if (!PUBLIC_PATHS.has(path)) {
     return errorJson('Not found', 404)
+  }
+
+  // Gate AnyRent-backed routes: no token → 401, zero upstream calls.
+  if (path.startsWith('/api/')) {
+    try {
+      assertBrowserToken(request, env)
+    } catch (err) {
+      if (err instanceof BrowserTokenError) {
+        return errorJson(err.message, err.status)
+      }
+      throw err
+    }
   }
 
   const lang = parseLang(url.searchParams.get('lang'))
